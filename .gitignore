@@ -1,0 +1,31 @@
+# Archivos internos de entorno y agente (No subir a GitHub)
+.agents/
+.agent/
+skills-lock.json
+GEMINI.md
+STATUS.md
+legacy_php/
+_reportes.zip
+graphify-out/
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+out-tsc/
+npm-debug.log*
+
+# Sistema Operativo / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
