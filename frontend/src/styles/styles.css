@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-canvas: #F7F6F3;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F9F9F8;
+  --border-hairline: #EAEAEA;
+  --text-primary: #111111;
+  --text-secondary: #787774;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.font-editorial {
+  font-family: 'Instrument Serif', Georgia, serif;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.bento-card {
+  background-color: #FFFFFF;
+  border: 1px solid #EAEAEA;
+  border-radius: 10px;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.bento-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.btn-primary-minimal {
+  background-color: #111111;
+  color: #FFFFFF;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 150ms ease, transform 120ms ease;
+}
+
+.btn-primary-minimal:hover {
+  background-color: #333333;
+}
+
+.btn-primary-minimal:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary-minimal {
+  background-color: #FFFFFF;
+  color: #111111;
+  border: 1px solid #EAEAEA;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 150ms ease, transform 120ms ease;
+}
+
+.btn-secondary-minimal:hover {
+  background-color: #F7F6F3;
+}
+
+.btn-secondary-minimal:active {
+  transform: scale(0.98);
+}
+
+.input-minimal {
+  width: 100%;
+  background-color: #F9F9F8;
+  border: 1px solid #EAEAEA;
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: #111111;
+  outline: none;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.input-minimal:focus {
+  background-color: #FFFFFF;
+  border-color: #111111;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-blue {
+  background-color: #E1F3FE;
+  color: #1F6C9F;
+}
+
+.badge-yellow {
+  background-color: #FBF3DB;
+  color: #956400;
+}
+
+.badge-green {
+  background-color: #EDF3EC;
+  color: #346538;
+}
+
+.badge-red {
+  background-color: #FDEBEC;
+  color: #9F2F2D;
+}
+
+.badge-neutral {
+  background-color: #F7F6F3;
+  color: #787774;
+  border: 1px solid #EAEAEA;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fade-entry {
+    animation: gentleEntry 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-entry {
+    animation: none;
+  }
+}
+
+@keyframes gentleEntry {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
