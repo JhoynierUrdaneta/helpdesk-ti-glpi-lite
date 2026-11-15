@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from .config import settings
 from .database import Base, engine, SessionLocal
@@ -9,9 +10,23 @@ from .seed import run_seed
 from .routers import auth, catalogs, users, tickets, activities
 
 
+def _ensure_glpi_columns():
+    stmts = [
+        "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS tipo VARCHAR(30) NOT NULL DEFAULT 'Incidente'",
+        "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS solucion TEXT",
+        "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS calificacion INTEGER",
+        "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS veces_reabierto INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE ticket_historial ADD COLUMN IF NOT EXISTS es_privado BOOLEAN NOT NULL DEFAULT FALSE",
+    ]
+    with engine.begin() as conn:
+        for s in stmts:
+            conn.execute(text(s))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _ensure_glpi_columns()
     db = SessionLocal()
     try:
         run_seed(db)

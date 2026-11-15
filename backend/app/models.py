@@ -95,12 +95,16 @@ class Ticket(Base):
 
     prioridad = Column(String(30), nullable=False)  # Baja | Media | Alta | Crítica
     impacto = Column(String(30), nullable=False)  # Bajo | Medio | Alto | Crítico
+    tipo = Column(String(30), default="Incidente", nullable=False)  # Incidente | Requerimiento
     estado = Column(
         String(30), default="Abierto", nullable=False
-    )  # Abierto | En Proceso | Pendiente Ext | Escalado | Cerrado | Cancelado
+    )  # Abierto | En Proceso | Pendiente Ext | Escalado | Resuelto | Cerrado | Cancelado
 
     descripcion = Column(Text, nullable=False)
     observaciones = Column(Text, nullable=True)
+    solucion = Column(Text, nullable=True)
+    calificacion = Column(Integer, nullable=True)  # 1..5 estrellas al aprobar cierre
+    veces_reabierto = Column(Integer, default=0, nullable=False)
     evidencia_url = Column(String(255), nullable=True)
 
     sede_rel = relationship("Sede")
@@ -129,6 +133,7 @@ class TicketHistorial(Base):
     estado_anterior = Column(String(30), nullable=True)
     estado_nuevo = Column(String(30), nullable=False)
     comentario = Column(Text, nullable=False)
+    es_privado = Column(Boolean, default=False, nullable=False)
     adjunto_url = Column(String(255), nullable=True)
     fecha = Column(DateTime, default=datetime.utcnow, nullable=False)
 

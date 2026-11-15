@@ -39,4 +39,12 @@ export class TicketsService {
   manageTicket(id: number, formData: FormData): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.baseUrl}/${id}/manage`, formData);
   }
+
+  approveTicket(id: number, calificacion: number, comentario?: string): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.baseUrl}/${id}/approve`, { calificacion, comentario });
+  }
+
+  reopenTicket(id: number, motivo: string): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.baseUrl}/${id}/reopen`, { motivo });
+  }
 }

@@ -90,6 +90,7 @@ class TicketHistorialOut(BaseModel):
     estado_anterior: Optional[str] = None
     estado_nuevo: str
     comentario: str
+    es_privado: bool = False
     adjunto_url: Optional[str] = None
     fecha: datetime
 
@@ -111,12 +112,25 @@ class TicketOut(BaseModel):
     responsable_nombre: str
     prioridad: str
     impacto: str
+    tipo: str = "Incidente"
     estado: str
     descripcion: str
     observaciones: Optional[str] = None
+    solucion: Optional[str] = None
+    calificacion: Optional[int] = None
+    veces_reabierto: int = 0
     evidencia_url: Optional[str] = None
     esta_bloqueado: bool
     historial: List[TicketHistorialOut] = []
+
+
+class ReopenTicketRequest(BaseModel):
+    motivo: str = Field(..., min_length=4)
+
+
+class ApproveTicketRequest(BaseModel):
+    calificacion: int = Field(..., ge=1, le=5)
+    comentario: Optional[str] = None
 
 
 class DashboardStatsOut(BaseModel):

@@ -6,7 +6,13 @@ from sqlalchemy import func, or_
 
 from ..database import get_db
 from ..models import Ticket, TicketHistorial, User, Sede, Categoria, Subcategoria
-from ..schemas import TicketOut, TicketHistorialOut, DashboardStatsOut
+from ..schemas import (
+    TicketOut,
+    TicketHistorialOut,
+    DashboardStatsOut,
+    ReopenTicketRequest,
+    ApproveTicketRequest,
+)
 from ..auth import get_active_verified_user, save_validated_upload
 
 router = APIRouter(prefix="/api/tickets", tags=["Tickets TI"])
@@ -32,9 +38,13 @@ def serialize_ticket(t: Ticket) -> TicketOut:
         responsable_nombre=t.responsable_rel.nombre if t.responsable_rel else "",
         prioridad=t.prioridad,
         impacto=t.impacto,
+        tipo=t.tipo or "Incidente",
         estado=t.estado,
         descripcion=t.descripcion,
         observaciones=t.observaciones,
+        solucion=t.solucion,
+        calificacion=t.calificacion,
+        veces_reabierto=t.veces_reabierto or 0,
         evidencia_url=t.evidencia_url,
         esta_bloqueado=t.estado in LOCKED_STATES,
         historial=[
@@ -46,6 +56,7 @@ def serialize_ticket(t: Ticket) -> TicketOut:
                 estado_anterior=h.estado_anterior,
                 estado_nuevo=h.estado_nuevo,
                 comentario=h.comentario,
+                es_privado=bool(h.es_privado),
                 adjunto_url=h.adjunto_url,
                 fecha=h.fecha,
             )
@@ -164,6 +175,7 @@ async def create_ticket(
     subcategoria_id: int = Form(...),
     prioridad: str = Form(...),
     impacto: str = Form(...),
+    tipo: str = Form("Incidente"),
     descripcion: str = Form(...),
     observaciones: Optional[str] = Form(None),
     fecha_compromiso: Optional[date] = Form(None),
@@ -188,6 +200,7 @@ async def create_ticket(
         responsable_id=assigned_id,
         prioridad=prioridad,
         impacto=impacto,
+        tipo=tipo if tipo in ("Incidente", "Requerimiento") else "Incidente",
         estado="Abierto",
         descripcion=descripcion.strip(),
         observaciones=observaciones.strip() if observaciones else None,
@@ -218,6 +231,8 @@ async def manage_ticket(
     ticket_id: int,
     estado: str = Form(...),
     observaciones: str = Form(""),
+    solucion: Optional[str] = Form(None),
+    es_privado: bool = Form(False),
     responsable_id: Optional[int] = Form(None),
     fecha_compromiso: Optional[date] = Form(None),
     evidencia: Optional[UploadFile] = File(None),
@@ -231,7 +246,7 @@ async def manage_ticket(
     if ticket.estado in LOCKED_STATES:
         raise HTTPException(
             status_code=400,
-            detail=f"El ticket #{ticket.id} ya se encuentra {ticket.estado.lower()} y está bloqueado.",
+            detail=f"El ticket #{ticket.id} está {ticket.estado.lower()}. Debe reabrirlo primero si requiere nueva gestión.",
         )
 
     adjunto_url = await save_validated_upload(
@@ -242,6 +257,10 @@ async def manage_ticket(
     ticket.estado = estado
     if observaciones.strip():
         ticket.observaciones = observaciones.strip()
+    if solucion and solucion.strip():
+        ticket.solucion = solucion.strip()
+    elif estado == "Resuelto" and observaciones.strip():
+        ticket.solucion = observaciones.strip()
     if responsable_id:
         ticket.responsable_id = responsable_id
     if fecha_compromiso:
@@ -262,10 +281,101 @@ async def manage_ticket(
         estado_anterior=estado_anterior,
         estado_nuevo=estado,
         comentario=comentario_bitacora,
+        es_privado=es_privado,
         adjunto_url=adjunto_url,
         fecha=datetime.utcnow(),
     )
     db.add(historial_item)
+    db.commit()
+    db.refresh(ticket)
+    return serialize_ticket(ticket)
+
+
+@router.post("/{ticket_id}/approve", response_model=TicketOut)
+def approve_solution(
+    ticket_id: int,
+    payload: ApproveTicketRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_active_verified_user),
+):
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado.")
+
+    if current_user.rol != "ADMIN" and current_user.id != ticket.creador_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Solo el solicitante que creó el ticket o un administrador puede aprobar la solución.",
+        )
+
+    if ticket.estado != "Resuelto":
+        raise HTTPException(
+            status_code=400,
+            detail="El ticket debe estar en estado 'Resuelto' para aprobar su cierre.",
+        )
+
+    estado_anterior = ticket.estado
+    ticket.estado = "Cerrado"
+    ticket.calificacion = payload.calificacion
+    ticket.fecha_cierre = datetime.utcnow()
+
+    nota = payload.comentario.strip() if payload.comentario and payload.comentario.strip() else "Solución aprobada por el solicitante."
+    db.add(
+        TicketHistorial(
+            ticket_id=ticket.id,
+            usuario_id=current_user.id,
+            estado_anterior=estado_anterior,
+            estado_nuevo="Cerrado",
+            comentario=f"{nota} (Calificación: {payload.calificacion}/5 ★)",
+            fecha=datetime.utcnow(),
+        )
+    )
+    db.commit()
+    db.refresh(ticket)
+    return serialize_ticket(ticket)
+
+
+@router.post("/{ticket_id}/reopen", response_model=TicketOut)
+def reopen_ticket(
+    ticket_id: int,
+    payload: ReopenTicketRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_active_verified_user),
+):
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado.")
+
+    if (
+        current_user.rol != "ADMIN"
+        and current_user.id not in (ticket.creador_id, ticket.responsable_id)
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="No tienes permiso para reabrir este ticket.",
+        )
+
+    if ticket.estado not in (LOCKED_STATES | {"Resuelto"}):
+        raise HTTPException(
+            status_code=400,
+            detail="Solo se pueden reabrir tickets resueltos, cerrados o cancelados.",
+        )
+
+    estado_anterior = ticket.estado
+    ticket.estado = "En Proceso"
+    ticket.fecha_cierre = None
+    ticket.veces_reabierto = (ticket.veces_reabierto or 0) + 1
+
+    db.add(
+        TicketHistorial(
+            ticket_id=ticket.id,
+            usuario_id=current_user.id,
+            estado_anterior=estado_anterior,
+            estado_nuevo="En Proceso",
+            comentario=f"[Ticket reabierto #{ticket.veces_reabierto}] {payload.motivo.strip()}",
+            fecha=datetime.utcnow(),
+        )
+    )
     db.commit()
     db.refresh(ticket)
     return serialize_ticket(ticket)

@@ -5,6 +5,7 @@ export function getStatusBadgeClass(estado: string): string {
     case 'En Proceso':
     case 'Pendiente Ext':
       return 'badge-pill badge-yellow';
+    case 'Resuelto':
     case 'Cerrado':
       return 'badge-pill badge-green';
     case 'Escalado':

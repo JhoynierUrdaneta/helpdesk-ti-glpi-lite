@@ -30,6 +30,14 @@ import { PRIORIDADES } from './tickets-list.page';
       <form (ngSubmit)="submit()" class="bento-card space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
+            <label class="block text-xs font-medium mb-1">Tipo de Ticket (GLPI)</label>
+            <select [(ngModel)]="form.tipo" name="tipo" class="input-minimal">
+              <option value="Incidente">Incidente (Falla / Soporte)</option>
+              <option value="Requerimiento">Requerimiento (Solicitud / Cambio)</option>
+            </select>
+          </div>
+
+          <div>
             <label class="block text-xs font-medium mb-1">Sede *</label>
             <select [(ngModel)]="form.sede_id" name="sede_id" class="input-minimal">
               <option [ngValue]="0" disabled>Seleccione sede…</option>
@@ -123,6 +131,7 @@ export class NuevoTicketPageComponent implements OnInit {
   impactos = ['Bajo', 'Medio', 'Alto'];
 
   form = {
+    tipo: 'Incidente',
     sede_id: 0,
     categoria_id: 0,
     subcategoria_id: 0,
@@ -155,6 +164,7 @@ export class NuevoTicketPageComponent implements OnInit {
       return;
     }
     const fd = new FormData();
+    fd.append('tipo', f.tipo);
     fd.append('sede_id', String(f.sede_id));
     fd.append('categoria_id', String(f.categoria_id));
     fd.append('subcategoria_id', String(f.subcategoria_id));

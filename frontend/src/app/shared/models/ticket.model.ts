@@ -6,6 +6,7 @@ export interface TicketHistorial {
   estado_anterior?: string;
   estado_nuevo: string;
   comentario: string;
+  es_privado?: boolean;
   adjunto_url?: string;
   fecha: string;
 }
@@ -27,9 +28,13 @@ export interface Ticket {
   responsable_nombre: string;
   prioridad: string;
   impacto: string;
+  tipo: string;
   estado: string;
   descripcion: string;
   observaciones?: string;
+  solucion?: string;
+  calificacion?: number;
+  veces_reabierto: number;
   evidencia_url?: string;
   esta_bloqueado: boolean;
   historial: TicketHistorial[];

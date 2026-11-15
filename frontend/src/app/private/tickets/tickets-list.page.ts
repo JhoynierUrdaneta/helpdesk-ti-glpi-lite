@@ -7,10 +7,10 @@ import { AuthService } from '../../shared/services/auth.service';
 import { Ticket } from '../../shared/models/ticket.model';
 import { getPriorityBadgeClass, getStatusBadgeClass } from '../../shared/utils/badge.util';
 
-export const ESTADOS = ['Abierto', 'En Proceso', 'Pendiente Ext', 'Escalado', 'Cerrado', 'Cancelado'];
+export const ESTADOS = ['Abierto', 'En Proceso', 'Pendiente Ext', 'Escalado', 'Resuelto', 'Cerrado', 'Cancelado'];
 export const PRIORIDADES = ['Baja', 'Media', 'Alta', 'Crítica'];
 
-type TicketTab = 'abiertos' | 'mine' | 'proceso' | 'cerrados' | 'todos';
+type TicketTab = 'abiertos' | 'mine' | 'proceso' | 'resueltos' | 'cerrados' | 'todos';
 
 @Component({
   selector: 'app-tickets-list-page',
@@ -170,6 +170,7 @@ export class TicketsListPageComponent implements OnInit {
     { id: 'abiertos', label: 'Abiertos' },
     { id: 'mine', label: 'Mis Tickets' },
     { id: 'proceso', label: 'En Proceso' },
+    { id: 'resueltos', label: 'Resueltos' },
     { id: 'cerrados', label: 'Cerrados' },
     { id: 'todos', label: 'Todos' },
   ];
@@ -198,6 +199,7 @@ export class TicketsListPageComponent implements OnInit {
     this.filters.scope = this.activeTab === 'mine' ? 'mine' : (this.auth.isAdmin() ? 'all' : 'mine');
     if (this.activeTab === 'abiertos') this.filters.estado = 'Abierto';
     else if (this.activeTab === 'proceso') this.filters.estado = 'En Proceso';
+    else if (this.activeTab === 'resueltos') this.filters.estado = 'Resuelto';
     else if (this.activeTab === 'cerrados') this.filters.estado = 'Cerrado';
     else this.filters.estado = '';
     this.loadTickets();
