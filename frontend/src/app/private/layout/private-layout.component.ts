@@ -24,7 +24,7 @@ import { AuthService } from '../../shared/services/auth.service';
           </a>
 
           <a routerLink="/app/tickets/nuevo"
-             class="px-3 py-1.5 rounded bg-[#38A169] hover:bg-[#2F855A] text-white text-xs font-semibold inline-flex items-center gap-1.5 shrink-0 transition-colors">
+             class="px-3.5 py-1.5 rounded-md bg-[#38A169] hover:bg-[#2F855A] text-white text-xs font-semibold inline-flex items-center gap-1.5 shrink-0 transition-colors">
             <i class="ph-bold ph-plus"></i> Nuevo Ticket
           </a>
 
@@ -34,7 +34,7 @@ import { AuthService } from '../../shared/services/auth.service';
               [(ngModel)]="searchTerm"
               name="searchTerm"
               placeholder="Buscar ticket por #ID o descripción..."
-              class="w-full h-8 pl-3 pr-8 rounded bg-white text-[#1E293B] text-xs placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#38BDF8]"
+              class="w-full h-8 pl-3 pr-8 rounded-md bg-white text-[#1E293B] text-xs placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#38BDF8]"
             />
             <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#1E293B]">
               <i class="ph ph-magnifying-glass text-sm"></i>
@@ -65,43 +65,43 @@ import { AuthService } from '../../shared/services/auth.service';
         <aside class="w-60 bg-[#2C3E50] text-[#CBD5E1] flex flex-col justify-between shrink-0">
           <div class="p-3 space-y-1">
             <a routerLink="/app/tickets"
-               class="w-full mb-3 px-3.5 py-2.5 rounded bg-[#2B95D6] hover:bg-[#2382BD] text-white text-xs font-semibold flex items-center gap-2.5 transition-colors">
+               class="w-full mb-3 px-3.5 py-2.5 rounded-lg bg-[#2B95D6] hover:bg-[#2382BD] text-white text-xs font-semibold flex items-center gap-2.5 transition-colors">
               <i class="ph-bold ph-ticket text-base"></i>
               <span>Mis Tickets</span>
             </a>
 
-            <a routerLink="/app/panel" routerLinkActive="bg-[#1E2B38] text-white border-l-4 border-[#38BDF8]" [routerLinkActiveOptions]="{ exact: true }"
-               class="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] rounded transition-colors hover:bg-[#34495E] hover:text-white">
+            <a routerLink="/app/panel" routerLinkActive="bg-[#1E2B38] text-white font-semibold" [routerLinkActiveOptions]="{ exact: true }"
+               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] rounded-lg transition-colors hover:bg-[#34495E] hover:text-white">
               <i class="ph ph-gauge text-base"></i> Panel General
             </a>
 
-            <a routerLink="/app/tickets" routerLinkActive="bg-[#1E2B38] text-white border-l-4 border-[#38BDF8]" [routerLinkActiveOptions]="{ exact: true }"
-               class="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] rounded transition-colors hover:bg-[#34495E] hover:text-white">
+            <a routerLink="/app/tickets" routerLinkActive="bg-[#1E2B38] text-white font-semibold" [routerLinkActiveOptions]="{ exact: true }"
+               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] rounded-lg transition-colors hover:bg-[#34495E] hover:text-white">
               <i class="ph ph-tray text-base"></i> Bandeja de Tickets
             </a>
 
-            <a routerLink="/app/tickets/nuevo" routerLinkActive="bg-[#1E2B38] text-white border-l-4 border-[#38BDF8]"
-               class="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] rounded transition-colors hover:bg-[#34495E] hover:text-white">
+            <a routerLink="/app/tickets/nuevo" routerLinkActive="bg-[#1E2B38] text-white font-semibold"
+               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] rounded-lg transition-colors hover:bg-[#34495E] hover:text-white">
               <i class="ph ph-plus-circle text-base"></i> Crear Ticket
             </a>
 
             <div class="pt-4 pb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Gestión Mensual</div>
 
-            <a routerLink="/app/informes" routerLinkActive="bg-[#1E2B38] text-white border-l-4 border-[#38BDF8]"
-               class="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] rounded transition-colors hover:bg-[#34495E] hover:text-white">
+            <a routerLink="/app/informes" routerLinkActive="bg-[#1E2B38] text-white font-semibold"
+               class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] rounded-lg transition-colors hover:bg-[#34495E] hover:text-white">
               <i class="ph ph-calendar-check text-base"></i> Informe de Actividades
             </a>
 
             <ng-container *ngIf="auth.isAdmin()">
               <div class="pt-4 pb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Administración</div>
 
-              <a routerLink="/app/usuarios" routerLinkActive="bg-[#1E2B38] text-white border-l-4 border-[#38BDF8]"
-                 class="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] rounded transition-colors hover:bg-[#34495E] hover:text-white">
+              <a routerLink="/app/usuarios" routerLinkActive="bg-[#1E2B38] text-white font-semibold"
+                 class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] rounded-lg transition-colors hover:bg-[#34495E] hover:text-white">
                 <i class="ph ph-users text-base"></i> Personal TI
               </a>
 
-              <a routerLink="/app/configuracion" routerLinkActive="bg-[#1E2B38] text-white border-l-4 border-[#38BDF8]"
-                 class="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] rounded transition-colors hover:bg-[#34495E] hover:text-white">
+              <a routerLink="/app/configuracion" routerLinkActive="bg-[#1E2B38] text-white font-semibold"
+                 class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] rounded-lg transition-colors hover:bg-[#34495E] hover:text-white">
                 <i class="ph ph-sliders text-base"></i> Catálogos y Sedes
               </a>
             </ng-container>
