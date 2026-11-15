@@ -15,14 +15,14 @@ import { ESTADOS } from './tickets-list.page';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="space-y-6 fade-entry" *ngIf="ticket">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#EAEAEA] pb-5">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-5">
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-mono text-xs text-[#787774]">TICKET #{{ ticket.id }}</span>
+            <span class="font-mono-code text-xs font-semibold text-[#2B95D6]">TICKET #{{ ticket.id }}</span>
             <span [class]="statusBadge(ticket.estado)">{{ ticket.estado }}</span>
             <span [class]="priorityBadge(ticket.prioridad)">{{ ticket.prioridad }}</span>
           </div>
-          <h2 class="font-editorial text-3xl text-[#111111] mt-1">{{ ticket.categoria_nombre }} · {{ ticket.sede_nombre }}</h2>
+          <h2 class="text-2xl font-bold text-[#1E293B] mt-1">{{ ticket.categoria_nombre }} · {{ ticket.sede_nombre }}</h2>
         </div>
         <a routerLink="/app/tickets" class="btn-secondary-minimal text-xs inline-flex items-center gap-1.5">
           <i class="ph ph-arrow-left"></i> Volver a bandeja

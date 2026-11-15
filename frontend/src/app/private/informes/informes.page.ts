@@ -17,11 +17,11 @@ const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
   imports: [CommonModule, FormsModule],
   template: `
     <div class="space-y-6 fade-entry">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#EAEAEA] pb-5">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-5">
         <div>
-          <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Bitácora mensual</span>
-          <h2 class="font-editorial text-3xl text-[#111111] mt-0.5">Informe de Actividades</h2>
-          <p *ngIf="report" class="text-xs text-[#787774] mt-1">{{ report.nombre_completo }} · {{ report.mes_legible }} · {{ report.total_actividades }} registros</p>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Bitácora mensual</span>
+          <h2 class="text-2xl font-bold text-[#1E293B] mt-0.5">Informe de Actividades</h2>
+          <p *ngIf="report" class="text-xs text-[#64748B] mt-1">{{ report.nombre_completo }} · {{ report.mes_legible }} · {{ report.total_actividades }} registros</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
@@ -74,42 +74,42 @@ const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
           </form>
         </div>
 
-        <div [class]="isOwnReport() ? 'lg:col-span-2' : 'lg:col-span-3'" class="bg-white border border-[#EAEAEA] rounded-md overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+        <div [class]="isOwnReport() ? 'lg:col-span-2' : 'lg:col-span-3'" class="bg-white border border-[#E2E8F0] rounded-lg shadow-sm overflow-x-auto">
+          <table class="table-hd">
             <thead>
-              <tr class="border-b border-[#EAEAEA] bg-[#FAFAFA] text-[11px] font-mono uppercase text-[#787774]">
-                <th class="py-3 px-4 w-24 border-r border-[#EAEAEA]">Semana</th>
-                <th class="py-3 px-4">Actividad</th>
-                <th class="py-3 px-4 w-36">Evidencia</th>
-                <th class="py-3 px-4">Entregable</th>
-                <th class="py-3 px-4 w-20 text-right"></th>
+              <tr>
+                <th class="w-28 border-r border-[#E2E8F0]">Semana</th>
+                <th>Actividad</th>
+                <th class="w-40">Evidencia</th>
+                <th>Entregable</th>
+                <th class="w-24 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[#EAEAEA] text-sm">
+            <tbody>
               <ng-container *ngFor="let w of weeks">
-                <tr *ngFor="let item of rows(w); let i = index" class="hover:bg-[#F7F6F3]/40">
-                  <td *ngIf="i === 0" [attr.rowspan]="rows(w).length" class="py-3 px-4 font-mono text-xs font-semibold align-middle bg-[#FAFAFA] border-r border-[#EAEAEA]">
+                <tr *ngFor="let item of rows(w); let i = index">
+                  <td *ngIf="i === 0" [attr.rowspan]="rows(w).length" class="font-mono-code text-xs font-semibold align-middle bg-[#F8FAFC] border-r border-[#E2E8F0]">
                     Semana {{ w }}
                   </td>
-                  <td class="py-3 px-4 align-top">
-                    <span class="font-mono text-[11px] text-[#787774] block mb-0.5">{{ item.fecha_registro }}</span>
-                    <p class="whitespace-pre-line">{{ item.actividad }}</p>
+                  <td class="align-top">
+                    <span class="font-mono-code text-xs text-[#64748B] block mb-1">{{ item.fecha_registro }}</span>
+                    <p class="whitespace-pre-line text-[#1E293B]">{{ item.actividad }}</p>
                   </td>
-                  <td class="py-3 px-4 align-top">
+                  <td class="align-top">
                     <a *ngIf="item.evidencia_foto_url" [href]="auth.getAssetUrl(item.evidencia_foto_url)" target="_blank">
-                      <img [src]="auth.getAssetUrl(item.evidencia_foto_url)" alt="Evidencia" class="w-28 h-20 object-cover rounded border border-[#EAEAEA]" />
+                      <img [src]="auth.getAssetUrl(item.evidencia_foto_url)" alt="Evidencia" class="w-28 h-20 object-cover rounded border border-[#E2E8F0]" />
                     </a>
-                    <span *ngIf="!item.evidencia_foto_url" class="text-xs text-[#787774] italic">Sin foto</span>
+                    <span *ngIf="!item.evidencia_foto_url" class="text-xs text-[#64748B] italic">Sin foto</span>
                   </td>
-                  <td class="py-3 px-4 align-top whitespace-pre-line">{{ item.entregable }}</td>
-                  <td class="py-3 px-4 align-top text-right whitespace-nowrap">
-                    <button (click)="edit(item)" title="Editar" class="p-1.5 text-[#787774] hover:text-[#111111]"><i class="ph ph-pencil-simple"></i></button>
-                    <button (click)="remove(item)" title="Eliminar" class="p-1.5 text-[#787774] hover:text-[#9F2F2D]"><i class="ph ph-trash"></i></button>
+                  <td class="align-top whitespace-pre-line text-[#334155]">{{ item.entregable }}</td>
+                  <td class="align-top text-right whitespace-nowrap">
+                    <button (click)="edit(item)" title="Editar" class="p-1.5 text-[#64748B] hover:text-[#2B95D6]"><i class="ph ph-pencil-simple text-base"></i></button>
+                    <button (click)="remove(item)" title="Eliminar" class="p-1.5 text-[#64748B] hover:text-[#B91C1C]"><i class="ph ph-trash text-base"></i></button>
                   </td>
                 </tr>
               </ng-container>
               <tr *ngIf="!report?.total_actividades">
-                <td colspan="5" class="py-12 text-center text-sm text-[#787774]">No hay actividades registradas en este mes.</td>
+                <td colspan="5" class="py-12 text-center text-sm text-[#64748B]">No hay actividades registradas en este mes.</td>
               </tr>
             </tbody>
           </table>

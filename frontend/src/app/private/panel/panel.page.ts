@@ -11,69 +11,69 @@ import { DashboardStats } from '../../shared/models/ticket.model';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="space-y-6 fade-entry">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#EAEAEA] pb-5">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-5">
         <div>
-          <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Resumen Operativo</span>
-          <h2 class="font-editorial text-3xl text-[#111111] mt-0.5">Panel de Control TI</h2>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Resumen Operativo</span>
+          <h2 class="text-2xl font-bold text-[#1E293B] mt-0.5">Panel de Control TI</h2>
         </div>
 
         <div class="flex items-center gap-2">
-          <div *ngIf="auth.isAdmin()" class="inline-flex rounded border border-[#EAEAEA] bg-white p-0.5 text-xs">
-            <button (click)="setScope('mine')" [class]="scope === 'mine' ? 'bg-[#111111] text-white px-3 py-1.5 rounded-sm' : 'px-3 py-1.5 text-[#787774]'">Mis Tickets</button>
-            <button (click)="setScope('all')" [class]="scope === 'all' ? 'bg-[#111111] text-white px-3 py-1.5 rounded-sm' : 'px-3 py-1.5 text-[#787774]'">Global TI</button>
+          <div *ngIf="auth.isAdmin()" class="inline-flex rounded-md border border-[#CBD5E1] bg-white p-0.5 text-xs">
+            <button (click)="setScope('mine')" [class]="scope === 'mine' ? 'bg-[#2B95D6] text-white px-3 py-1.5 rounded font-semibold' : 'px-3 py-1.5 text-[#64748B] font-medium'">Mis Tickets</button>
+            <button (click)="setScope('all')" [class]="scope === 'all' ? 'bg-[#2B95D6] text-white px-3 py-1.5 rounded font-semibold' : 'px-3 py-1.5 text-[#64748B] font-medium'">Global TI</button>
           </div>
           <a routerLink="/app/tickets/nuevo" class="btn-primary-minimal text-xs inline-flex items-center gap-1.5">
-            <i class="ph ph-plus"></i> Crear Ticket
+            <i class="ph-bold ph-plus"></i> Crear Ticket
           </a>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4" *ngIf="stats">
         <div class="bento-card">
-          <span class="text-xs font-mono uppercase text-[#787774]">Total Solicitudes</span>
-          <p class="font-editorial text-4xl mt-2">{{ stats.total }}</p>
-          <span class="text-xs text-[#787774] mt-1 block">Histórico registrado</span>
+          <span class="text-xs font-semibold uppercase text-[#64748B]">Total Solicitudes</span>
+          <p class="text-3xl font-bold text-[#1E293B] mt-2">{{ stats.total }}</p>
+          <span class="text-xs text-[#64748B] mt-1 block">Histórico registrado</span>
         </div>
         <div class="bento-card">
-          <span class="text-xs font-mono uppercase text-[#787774]">Pendientes</span>
-          <p class="font-editorial text-4xl mt-2">{{ stats.pendientes }}</p>
-          <span class="text-xs text-[#956400] mt-1 block">En atención o espera</span>
+          <span class="text-xs font-semibold uppercase text-[#64748B]">Pendientes</span>
+          <p class="text-3xl font-bold text-[#B45309] mt-2">{{ stats.pendientes }}</p>
+          <span class="text-xs text-[#64748B] mt-1 block">En atención o espera</span>
         </div>
         <div class="bento-card">
-          <span class="text-xs font-mono uppercase text-[#787774]">Cerrados</span>
-          <p class="font-editorial text-4xl mt-2">{{ stats.cerrados }}</p>
-          <span class="text-xs text-[#346538] mt-1 block">Finalizados</span>
+          <span class="text-xs font-semibold uppercase text-[#64748B]">Cerrados</span>
+          <p class="text-3xl font-bold text-[#15803D] mt-2">{{ stats.cerrados }}</p>
+          <span class="text-xs text-[#64748B] mt-1 block">Finalizados</span>
         </div>
         <div class="bento-card">
-          <span class="text-xs font-mono uppercase text-[#787774]">Promedio SLA</span>
-          <p class="font-mono text-3xl mt-2">{{ stats.promedio_horas_sla ?? '—' }} <span class="text-sm font-sans text-[#787774]">hrs</span></p>
-          <span class="text-xs text-[#787774] mt-1 block">Tiempo medio de cierre</span>
+          <span class="text-xs font-semibold uppercase text-[#64748B]">Promedio SLA</span>
+          <p class="font-mono-code text-3xl font-bold text-[#2B95D6] mt-2">{{ stats.promedio_horas_sla ?? '—' }} <span class="text-sm font-sans font-normal text-[#64748B]">hrs</span></p>
+          <span class="text-xs text-[#64748B] mt-1 block">Tiempo medio de cierre</span>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" *ngIf="stats">
         <div class="bento-card lg:col-span-2">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-semibold">Volumen de Tickets (últimos 7 días)</h3>
-            <span class="text-xs font-mono text-[#787774]">Solicitudes por día</span>
+            <h3 class="text-sm font-bold text-[#1E293B]">Volumen de Tickets (últimos 7 días)</h3>
+            <span class="text-xs font-mono-code text-[#64748B]">Solicitudes por día</span>
           </div>
-          <div class="grid grid-cols-7 gap-3 items-end h-44 pt-6 px-2 border-t border-[#EAEAEA]">
+          <div class="grid grid-cols-7 gap-3 items-end h-44 pt-6 px-2 border-t border-[#E2E8F0]">
             <div *ngFor="let d of stats.ultimos_7_dias" class="flex flex-col items-center gap-2 h-full justify-end">
-              <span class="text-xs font-mono text-[#787774]">{{ d.total }}</span>
-              <div class="w-full bg-[#111111] rounded-t" [style.height.%]="barHeight(d.total)"></div>
-              <span class="text-[11px] font-mono text-[#787774]">{{ d.dia }}</span>
+              <span class="text-xs font-mono-code text-[#475569]">{{ d.total }}</span>
+              <div class="w-full bg-[#2B95D6] rounded-t" [style.height.%]="barHeight(d.total)"></div>
+              <span class="text-[11px] font-mono-code text-[#64748B]">{{ d.dia }}</span>
             </div>
           </div>
         </div>
 
         <div class="bento-card">
-          <h3 class="text-sm font-semibold mb-4">Distribución por Estado</h3>
-          <div class="space-y-3 border-t border-[#EAEAEA] pt-4">
+          <h3 class="text-sm font-bold text-[#1E293B] mb-4">Distribución por Estado</h3>
+          <div class="space-y-3 border-t border-[#E2E8F0] pt-4">
             <div *ngFor="let item of stats.por_estado" class="flex items-center justify-between text-sm">
-              <span class="text-[#787774]">{{ item.estado }}</span>
-              <span class="font-mono font-medium">{{ item.cantidad }}</span>
+              <span class="text-[#475569]">{{ item.estado }}</span>
+              <span class="font-mono-code font-semibold text-[#1E293B]">{{ item.cantidad }}</span>
             </div>
-            <div *ngIf="stats.por_estado.length === 0" class="text-xs text-[#787774] py-6 text-center">Sin registros aún</div>
+            <div *ngIf="stats.por_estado.length === 0" class="text-xs text-[#64748B] py-6 text-center">Sin registros aún</div>
           </div>
         </div>
       </div>

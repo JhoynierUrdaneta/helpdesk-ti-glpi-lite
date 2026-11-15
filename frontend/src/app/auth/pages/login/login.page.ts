@@ -9,13 +9,12 @@ import { AuthService } from '../../../shared/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="mb-8">
-      <span class="badge-pill badge-blue">Mesa de Servicio TI</span>
-      <h1 class="font-editorial text-4xl text-[#111111] mt-3">
-        Control de Incidentes y Actividades
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-[#1E293B]">
+        Iniciar Sesión
       </h1>
-      <p class="text-sm text-[#787774] mt-2">
-        Ingresa con tu cuenta del área de TI para gestionar tickets y registrar tu informe mensual.
+      <p class="text-sm text-[#64748B] mt-1">
+        Accede al portal de tickets TI y registro mensual de actividades.
       </p>
     </div>
 

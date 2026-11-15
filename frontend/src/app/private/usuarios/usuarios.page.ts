@@ -11,9 +11,9 @@ import { User } from '../../shared/models/user.model';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="space-y-6 fade-entry">
-      <div class="border-b border-[#EAEAEA] pb-5">
-        <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Administración</span>
-        <h2 class="font-editorial text-3xl text-[#111111] mt-0.5">Personal TI</h2>
+      <div class="border-b border-[#E2E8F0] pb-5">
+        <span class="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Administración</span>
+        <h2 class="text-2xl font-bold text-[#1E293B] mt-0.5">Personal TI</h2>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -55,26 +55,26 @@ import { User } from '../../shared/models/user.model';
           </form>
         </div>
 
-        <div class="lg:col-span-2 bg-white border border-[#EAEAEA] rounded-md overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+        <div class="lg:col-span-2 bg-white border border-[#E2E8F0] rounded-lg shadow-sm overflow-x-auto">
+          <table class="table-hd">
             <thead>
-              <tr class="border-b border-[#EAEAEA] bg-[#FAFAFA] text-[11px] font-mono uppercase text-[#787774]">
-                <th class="py-3 px-4">Nombre</th>
-                <th class="py-3 px-4">Usuario</th>
-                <th class="py-3 px-4">Rol</th>
-                <th class="py-3 px-4">Estado</th>
-                <th class="py-3 px-4 text-right"></th>
+              <tr>
+                <th>Nombre</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th class="text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[#EAEAEA] text-sm">
-              <tr *ngFor="let u of users" class="hover:bg-[#F7F6F3]/50">
-                <td class="py-3 px-4 font-medium">{{ u.nombre }}</td>
-                <td class="py-3 px-4 font-mono text-xs text-[#787774]">&#64;{{ u.usuario }}</td>
-                <td class="py-3 px-4"><span class="badge-pill" [class.badge-blue]="u.rol === 'ADMIN'" [class.badge-neutral]="u.rol !== 'ADMIN'">{{ u.rol }}</span></td>
-                <td class="py-3 px-4"><span class="badge-pill" [class.badge-green]="u.activo" [class.badge-red]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span></td>
-                <td class="py-3 px-4 text-right whitespace-nowrap">
-                  <button (click)="edit(u)" class="btn-secondary-minimal py-1 px-2.5 text-xs">Editar</button>
-                  <button (click)="remove(u)" title="Eliminar" class="p-1.5 text-[#787774] hover:text-[#9F2F2D]"><i class="ph ph-trash"></i></button>
+            <tbody>
+              <tr *ngFor="let u of users">
+                <td class="font-medium text-[#1E293B]">{{ u.nombre }}</td>
+                <td class="font-mono-code text-xs text-[#64748B]">&#64;{{ u.usuario }}</td>
+                <td><span class="badge-pill" [class.badge-blue]="u.rol === 'ADMIN'" [class.badge-neutral]="u.rol !== 'ADMIN'">{{ u.rol }}</span></td>
+                <td><span class="badge-pill" [class.badge-green]="u.activo" [class.badge-red]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span></td>
+                <td class="text-right whitespace-nowrap space-x-1">
+                  <button (click)="edit(u)" class="btn-secondary-minimal py-1.5 px-3 text-xs">Editar</button>
+                  <button (click)="remove(u)" title="Eliminar" class="p-1.5 text-[#64748B] hover:text-[#B91C1C]"><i class="ph ph-trash text-base"></i></button>
                 </td>
               </tr>
             </tbody>

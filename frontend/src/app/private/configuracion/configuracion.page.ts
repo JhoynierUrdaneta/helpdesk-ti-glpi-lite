@@ -13,9 +13,9 @@ type CatalogType = 'sedes' | 'categorias' | 'subcategorias';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="space-y-6 fade-entry">
-      <div class="border-b border-[#EAEAEA] pb-5">
-        <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Clasificación</span>
-        <h2 class="font-editorial text-3xl text-[#111111] mt-0.5">Sedes y Categorías</h2>
+      <div class="border-b border-[#E2E8F0] pb-5">
+        <span class="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Clasificación</span>
+        <h2 class="text-2xl font-bold text-[#1E293B] mt-0.5">Sedes y Categorías</h2>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6" *ngIf="catalogs">

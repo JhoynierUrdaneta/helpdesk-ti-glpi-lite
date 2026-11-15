@@ -10,12 +10,12 @@ import { ToastService } from '../../../shared/services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="mb-8">
+    <div class="mb-6">
       <span class="badge-pill badge-yellow">Seguridad Requerida</span>
-      <h1 class="font-editorial text-4xl text-[#111111] mt-3">
+      <h1 class="text-2xl font-bold text-[#1E293B] mt-3">
         Actualizar credencial inicial
       </h1>
-      <p class="text-sm text-[#787774] mt-2">
+      <p class="text-sm text-[#64748B] mt-1.5">
         Hola <b>{{ auth.getCurrentUser()?.nombre }}</b>, detectamos el uso de la clave temporal asignada. Define una clave personal para continuar.
       </p>
     </div>

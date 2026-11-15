@@ -17,10 +17,10 @@ import { PRIORIDADES } from './tickets-list.page';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="max-w-3xl mx-auto space-y-6 fade-entry">
-      <div class="flex items-center justify-between border-b border-[#EAEAEA] pb-5">
+      <div class="flex items-center justify-between border-b border-[#E2E8F0] pb-5">
         <div>
-          <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Registro</span>
-          <h2 class="font-editorial text-3xl text-[#111111] mt-0.5">Crear Nuevo Ticket TI</h2>
+          <span class="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Registro</span>
+          <h2 class="text-2xl font-bold text-[#1E293B] mt-0.5">Crear Nuevo Ticket TI</h2>
         </div>
         <a routerLink="/app/tickets" class="btn-secondary-minimal text-xs inline-flex items-center gap-1.5">
           <i class="ph ph-arrow-left"></i> Volver
