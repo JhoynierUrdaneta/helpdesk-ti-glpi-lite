@@ -9,8 +9,8 @@ import { AuthService } from '../../shared/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
-    <div class="min-h-screen flex flex-col bg-[#F3F5F8] text-[#1E293B]">
-      <!-- Barra superior estilo Help Desk -->
+    <div class="h-screen overflow-hidden flex flex-col bg-[#F3F5F8] text-[#1E293B]">
+      <!-- Barra superior fija estilo Help Desk -->
       <header class="h-14 bg-[#243648] text-white border-b border-[#1A2836] px-4 flex items-center justify-between gap-4 shrink-0 z-20">
         <div class="flex items-center gap-4 flex-1 max-w-3xl">
           <a routerLink="/app/panel" class="flex items-center gap-2.5 shrink-0 mr-2">
@@ -60,9 +60,9 @@ import { AuthService } from '../../shared/services/auth.service';
         </div>
       </header>
 
-      <!-- Cuerpo: Sidebar izquierdo + Workspace -->
-      <div class="flex flex-1 min-h-0">
-        <aside class="w-60 bg-[#2C3E50] text-[#CBD5E1] flex flex-col justify-between shrink-0">
+      <!-- Cuerpo: Sidebar fijo + Workspace con scroll independiente -->
+      <div class="flex flex-1 min-h-0 overflow-hidden">
+        <aside class="w-60 bg-[#2C3E50] text-[#CBD5E1] flex flex-col justify-between shrink-0 overflow-y-auto">
           <div class="p-3 space-y-1">
             <a routerLink="/app/tickets"
                class="w-full mb-3 px-3.5 py-2.5 rounded-lg bg-[#2B95D6] hover:bg-[#2382BD] text-white text-xs font-semibold flex items-center gap-2.5 transition-colors">
