@@ -9,89 +9,95 @@ import { AuthService } from '../../../shared/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-[#1E293B]">
-        Iniciar Sesión
+    <div class="mb-7">
+      <h1 class="text-2xl sm:text-3xl font-bold text-[#1E293B] tracking-tight">
+        Bienvenido de nuevo
       </h1>
-      <p class="text-sm text-[#64748B] mt-1">
-        Accede al portal de tickets TI y registro mensual de actividades.
+      <p class="text-sm text-[#64748B] mt-1.5">
+        Ingresa tus credenciales del área de TI para acceder al panel.
       </p>
     </div>
 
     <div
       *ngIf="error"
-      class="mb-6 p-3.5 rounded-lg bg-[#FDEBEC] text-[#9F2F2D] border border-[#f5c2c4] text-xs font-semibold flex items-center gap-2.5"
+      class="mb-5 p-3.5 rounded-lg bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA] text-xs font-semibold flex items-center gap-2.5"
     >
       <i class="ph-bold ph-warning text-base shrink-0"></i>
       <span>{{ error }}</span>
     </div>
 
-    <form (ngSubmit)="onSubmit()" class="space-y-5">
+    <form (ngSubmit)="onSubmit()" class="space-y-4">
       <div>
-        <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#787774] mb-1.5">
+        <label class="block text-xs font-semibold text-[#334155] mb-1.5">
           Usuario TI
         </label>
-        <input
-          type="text"
-          [(ngModel)]="usuario"
-          name="usuario"
-          required
-          class="input-minimal font-mono-code"
-          placeholder="ej. admin o cmendoza"
-        />
+        <div class="relative">
+          <i class="ph ph-user text-[#94A3B8] text-base absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input
+            type="text"
+            [(ngModel)]="usuario"
+            name="usuario"
+            required
+            class="input-minimal !pl-9 font-mono-code"
+            placeholder="ej. admin o cmendoza"
+          />
+        </div>
       </div>
 
       <div>
-        <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#787774] mb-1.5">
+        <label class="block text-xs font-semibold text-[#334155] mb-1.5">
           Contraseña
         </label>
-        <input
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          required
-          class="input-minimal"
-          placeholder="••••••••"
-        />
+        <div class="relative">
+          <i class="ph ph-lock-simple text-[#94A3B8] text-base absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            class="input-minimal !pl-9"
+            placeholder="••••••••"
+          />
+        </div>
       </div>
 
       <button
         type="submit"
         [disabled]="loading"
-        class="btn-primary-minimal w-full py-3 text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+        class="btn-primary-minimal w-full py-3 text-sm flex items-center justify-center gap-2 shadow-sm mt-2"
       >
+        <span>{{ loading ? 'Verificando acceso...' : 'Iniciar Sesión' }}</span>
         <i class="ph-bold ph-arrow-right"></i>
-        <span>{{ loading ? 'Verificando acceso...' : 'Entrar al Workspace' }}</span>
       </button>
 
-      <div class="pt-5 border-t border-[#EAEAEA]">
-        <p class="text-[11px] text-[#787774] mb-2.5 font-medium">
-          Cuentas de prueba preconfiguradas (Seed):
+      <div class="pt-5 mt-5 border-t border-[#E2E8F0]">
+        <p class="text-xs text-[#64748B] mb-2.5 font-medium">
+          Cuentas rápidas de prueba:
         </p>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-3 gap-2.5">
           <button
             type="button"
             (click)="fillDemo('admin', 'admin123')"
-            class="px-2.5 py-2 rounded border border-[#EAEAEA] bg-[#F9F9F8] hover:bg-white text-left transition-colors"
+            class="px-3 py-2.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#2B95D6] text-left transition-colors"
           >
-            <span class="block font-mono-code text-[11px] font-semibold text-[#111111]">admin</span>
-            <span class="block text-[10px] text-[#787774]">Coordinador TI</span>
+            <span class="block font-mono-code text-xs font-semibold text-[#1E293B]">admin</span>
+            <span class="block text-[11px] text-[#64748B]">Coordinador TI</span>
           </button>
           <button
             type="button"
             (click)="fillDemo('cmendoza', 'cmendoza123')"
-            class="px-2.5 py-2 rounded border border-[#EAEAEA] bg-[#F9F9F8] hover:bg-white text-left transition-colors"
+            class="px-3 py-2.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#2B95D6] text-left transition-colors"
           >
-            <span class="block font-mono-code text-[11px] font-semibold text-[#111111]">cmendoza</span>
-            <span class="block text-[10px] text-[#787774]">Técnico Nivel 2</span>
+            <span class="block font-mono-code text-xs font-semibold text-[#1E293B]">cmendoza</span>
+            <span class="block text-[11px] text-[#64748B]">Técnico Nivel 2</span>
           </button>
           <button
             type="button"
             (click)="fillDemo('lgomez', 'lgomez')"
-            class="px-2.5 py-2 rounded border border-[#EAEAEA] bg-[#F9F9F8] hover:bg-white text-left transition-colors"
+            class="px-3 py-2.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#2B95D6] text-left transition-colors"
           >
-            <span class="block font-mono-code text-[11px] font-semibold text-[#111111]">lgomez</span>
-            <span class="block text-[10px] text-[#956400]">1er Login Demo</span>
+            <span class="block font-mono-code text-xs font-semibold text-[#1E293B]">lgomez</span>
+            <span class="block text-[11px] text-[#B45309]">1er Login Demo</span>
           </button>
         </div>
       </div>
