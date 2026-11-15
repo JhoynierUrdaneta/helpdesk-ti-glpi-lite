@@ -5,144 +5,114 @@ import { ActivitiesService } from '../../shared/services/activities.service';
 import { UsersService } from '../../shared/services/users.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
-import { ActivityItem } from '../../shared/models/activity.model';
+import { ActivityLog, MonthlyReport } from '../../shared/models/activity.model';
 import { User } from '../../shared/models/user.model';
-import { calculateWeekLabel, currentYearMonth, todayIsoDate } from '../../shared/utils/date-week.util';
+import { computeWeekFromDateStr } from '../../shared/utils/date-week.util';
 
-interface WeekGroup {
-  semana: string;
-  items: ActivityItem[];
-}
+const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
 
 @Component({
   selector: 'app-informes-page',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-6">
-      <!-- Encabezado y Botones de Exportación Word / PDF -->
+    <div class="space-y-6 fade-entry">
       <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#EAEAEA] pb-5">
         <div>
-          <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Bitácora Mensual TI</span>
-          <h2 class="font-serif text-3xl text-[#111111] mt-0.5">Informe Mensual de Actividades</h2>
+          <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Bitácora mensual</span>
+          <h2 class="font-editorial text-3xl text-[#111111] mt-0.5">Informe de Actividades</h2>
+          <p *ngIf="report" class="text-xs text-[#787774] mt-1">{{ report.nombre_completo }} · {{ report.mes_legible }} · {{ report.total_actividades }} registros</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <input type="month" [(ngModel)]="mes" (change)="loadActivities()" class="input-minimal w-40 font-mono text-xs" />
-
-          <select *ngIf="auth.isAdmin()" [(ngModel)]="selectedUserId" (change)="loadActivities()" class="input-minimal w-48 text-xs">
+          <input type="month" [(ngModel)]="mes" (change)="load()" class="input-minimal w-40 font-mono-code text-xs" />
+          <select *ngIf="auth.isAdmin()" [(ngModel)]="userId" (change)="load()" class="input-minimal w-48 text-xs">
             <option *ngFor="let u of users" [ngValue]="u.id">{{ u.nombre }}</option>
           </select>
-
-          <button (click)="exportReport('docx')" class="btn-secondary text-xs">
-            <i class="ph ph-file-doc text-base"></i> Descargar Word (.docx)
+          <button (click)="export('docx')" class="btn-secondary-minimal text-xs inline-flex items-center gap-1.5">
+            <i class="ph ph-file-doc text-base"></i> Word
           </button>
-
-          <button (click)="exportReport('pdf')" class="btn-primary text-xs">
-            <i class="ph ph-file-pdf text-base"></i> Descargar PDF (.pdf)
+          <button (click)="export('pdf')" class="btn-primary-minimal text-xs inline-flex items-center gap-1.5">
+            <i class="ph ph-file-pdf text-base"></i> PDF
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Formulario Progresivo Día a Día -->
-        <div class="bento-card space-y-4 h-fit">
+        <div class="bento-card space-y-4 h-fit" *ngIf="isOwnReport()">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-mono uppercase tracking-wider text-[#787774]">
-              {{ editingId ? 'Editar Actividad #' + editingId : 'Registrar Actividad del Día' }}
+              {{ editingId ? 'Editar actividad' : 'Registrar actividad del día' }}
             </h3>
-            <span class="badge bg-[#E1F3FE] text-[#0B5CAD]">{{ previewWeek(form.fecha) }}</span>
+            <span class="badge-pill badge-blue">Semana {{ week(form.fecha) }}</span>
           </div>
 
-          <form (ngSubmit)="saveActivity()" class="space-y-3">
+          <form (ngSubmit)="save()" class="space-y-3">
             <div>
-              <label class="block text-xs font-medium mb-1">Fecha de Ejecución *</label>
-              <input type="date" [(ngModel)]="form.fecha" name="fecha" required class="input-minimal font-mono text-xs" />
+              <label class="block text-xs font-medium mb-1">Fecha *</label>
+              <input type="date" [(ngModel)]="form.fecha" name="fecha" class="input-minimal font-mono-code text-xs" />
             </div>
-
             <div>
-              <label class="block text-xs font-medium mb-1">Actividad Realizada *</label>
-              <textarea [(ngModel)]="form.actividad" name="actividad" rows="3" required class="input-minimal" placeholder="Ej: Mantenimiento preventivo de equipos en sede..."></textarea>
+              <label class="block text-xs font-medium mb-1">Actividad *</label>
+              <textarea [(ngModel)]="form.actividad" name="actividad" rows="3" class="input-minimal" placeholder="Ej: Mantenimiento preventivo de equipos…"></textarea>
             </div>
-
             <div>
-              <label class="block text-xs font-medium mb-1">Entregable / Resultado *</label>
-              <textarea [(ngModel)]="form.entregable" name="entregable" rows="2" required class="input-minimal" placeholder="Ej: Acta firmada y equipos operativos..."></textarea>
+              <label class="block text-xs font-medium mb-1">Entregable *</label>
+              <textarea [(ngModel)]="form.entregable" name="entregable" rows="2" class="input-minimal" placeholder="Ej: Acta firmada, equipos operativos…"></textarea>
             </div>
-
             <div>
-              <label class="block text-xs font-medium mb-1">Foto de Evidencia {{ editingId ? '(Opcional para reemplazar)' : '*' }}</label>
-              <input type="file" accept="image/*" (change)="onPhotoSelected($event)" class="input-minimal text-xs" />
+              <label class="block text-xs font-medium mb-1">Foto de evidencia {{ editingId ? '(opcional, reemplaza)' : '' }}</label>
+              <input type="file" accept="image/*" (change)="onPhoto($event)" class="input-minimal text-xs" />
+              <img *ngIf="preview" [src]="preview" alt="Vista previa" class="mt-2 w-full h-32 object-cover rounded border border-[#EAEAEA]" />
             </div>
-
             <div class="flex gap-2 pt-2">
-              <button *ngIf="editingId" type="button" (click)="cancelEdit()" class="btn-secondary flex-1 justify-center">
-                Cancelar
-              </button>
-              <button type="submit" [disabled]="saving" class="btn-primary flex-1 justify-center">
-                <i class="ph ph-floppy-disk"></i> {{ saving ? 'Guardando...' : (editingId ? 'Actualizar' : 'Agregar al Informe') }}
+              <button *ngIf="editingId" type="button" (click)="reset()" class="btn-secondary-minimal flex-1">Cancelar</button>
+              <button type="submit" [disabled]="saving" class="btn-primary-minimal flex-1 inline-flex items-center justify-center gap-1.5">
+                <i class="ph ph-floppy-disk"></i> {{ saving ? 'Guardando…' : (editingId ? 'Actualizar' : 'Agregar') }}
               </button>
             </div>
           </form>
         </div>
 
-        <!-- Vista Previa Formato Oficial (Semana 1 a Semana 4) -->
-        <div class="lg:col-span-2 bg-white border border-[#EAEAEA] rounded-md overflow-hidden">
-          <div class="p-4 border-b border-[#EAEAEA] bg-[#FAFAFA] flex items-center justify-between">
-            <span class="text-xs font-mono uppercase text-[#787774]">Vista Previa del Formato de Actividades ({{ mes }})</span>
-            <span class="text-xs font-mono text-[#787774]">{{ activities.length }} registros</span>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="border-b border-[#EAEAEA] bg-[#FAFAFA] text-[11px] font-mono uppercase text-[#787774]">
-                  <th class="py-3 px-4 w-28 border-r border-[#EAEAEA]">Semana</th>
-                  <th class="py-3 px-4">Actividad</th>
-                  <th class="py-3 px-4 w-40">Evidencia (Foto)</th>
-                  <th class="py-3 px-4">Entregable</th>
-                  <th class="py-3 px-4 w-24 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-[#EAEAEA] text-sm">
-                <ng-container *ngFor="let group of groupedWeeks">
-                  <tr *ngFor="let item of group.items; let idx = index" class="hover:bg-[#F7F6F3]/40">
-                    <td *ngIf="idx === 0" [attr.rowspan]="group.items.length"
-                        class="py-3 px-4 font-mono text-xs font-semibold align-middle bg-[#FAFAFA] border-r border-[#EAEAEA]">
-                      {{ group.semana }}
-                    </td>
-                    <td class="py-3 px-4 align-top">
-                      <span class="font-mono text-[11px] text-[#787774] block mb-0.5">{{ item.fecha }}</span>
-                      <p class="whitespace-pre-line">{{ item.actividad }}</p>
-                    </td>
-                    <td class="py-3 px-4 align-top">
-                      <a *ngIf="item.evidencia_url" [href]="item.evidencia_url" target="_blank" class="block">
-                        <img [src]="item.evidencia_url" alt="Evidencia" class="w-28 h-20 object-cover rounded border border-[#EAEAEA]" />
-                      </a>
-                      <span *ngIf="!item.evidencia_url" class="text-xs text-[#787774] italic">Sin foto</span>
-                    </td>
-                    <td class="py-3 px-4 align-top whitespace-pre-line">{{ item.entregable }}</td>
-                    <td class="py-3 px-4 align-top text-right">
-                      <div class="inline-flex gap-1">
-                        <button (click)="startEdit(item)" title="Editar" class="p-1.5 text-[#787774] hover:text-[#111111] rounded hover:bg-[#EAEAEA]/60">
-                          <i class="ph ph-pencil-simple"></i>
-                        </button>
-                        <button (click)="removeActivity(item)" title="Eliminar" class="p-1.5 text-[#787774] hover:text-[#B42318] rounded hover:bg-[#FDEBEC]">
-                          <i class="ph ph-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </ng-container>
-
-                <tr *ngIf="activities.length === 0">
-                  <td colspan="5" class="py-12 text-center text-sm text-[#787774]">
-                    No hay actividades registradas en este mes. Agregue su avance diario desde el panel izquierdo.
+        <div [class]="isOwnReport() ? 'lg:col-span-2' : 'lg:col-span-3'" class="bg-white border border-[#EAEAEA] rounded-md overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[#EAEAEA] bg-[#FAFAFA] text-[11px] font-mono uppercase text-[#787774]">
+                <th class="py-3 px-4 w-24 border-r border-[#EAEAEA]">Semana</th>
+                <th class="py-3 px-4">Actividad</th>
+                <th class="py-3 px-4 w-36">Evidencia</th>
+                <th class="py-3 px-4">Entregable</th>
+                <th class="py-3 px-4 w-20 text-right"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#EAEAEA] text-sm">
+              <ng-container *ngFor="let w of weeks">
+                <tr *ngFor="let item of rows(w); let i = index" class="hover:bg-[#F7F6F3]/40">
+                  <td *ngIf="i === 0" [attr.rowspan]="rows(w).length" class="py-3 px-4 font-mono text-xs font-semibold align-middle bg-[#FAFAFA] border-r border-[#EAEAEA]">
+                    Semana {{ w }}
+                  </td>
+                  <td class="py-3 px-4 align-top">
+                    <span class="font-mono text-[11px] text-[#787774] block mb-0.5">{{ item.fecha_registro }}</span>
+                    <p class="whitespace-pre-line">{{ item.actividad }}</p>
+                  </td>
+                  <td class="py-3 px-4 align-top">
+                    <a *ngIf="item.evidencia_foto_url" [href]="auth.getAssetUrl(item.evidencia_foto_url)" target="_blank">
+                      <img [src]="auth.getAssetUrl(item.evidencia_foto_url)" alt="Evidencia" class="w-28 h-20 object-cover rounded border border-[#EAEAEA]" />
+                    </a>
+                    <span *ngIf="!item.evidencia_foto_url" class="text-xs text-[#787774] italic">Sin foto</span>
+                  </td>
+                  <td class="py-3 px-4 align-top whitespace-pre-line">{{ item.entregable }}</td>
+                  <td class="py-3 px-4 align-top text-right whitespace-nowrap">
+                    <button (click)="edit(item)" title="Editar" class="p-1.5 text-[#787774] hover:text-[#111111]"><i class="ph ph-pencil-simple"></i></button>
+                    <button (click)="remove(item)" title="Eliminar" class="p-1.5 text-[#787774] hover:text-[#9F2F2D]"><i class="ph ph-trash"></i></button>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
+              </ng-container>
+              <tr *ngIf="!report?.total_actividades">
+                <td colspan="5" class="py-12 text-center text-sm text-[#787774]">No hay actividades registradas en este mes.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -154,97 +124,80 @@ export class InformesPageComponent implements OnInit {
   private toast = inject(ToastService);
   auth = inject(AuthService);
 
-  mes = currentYearMonth();
-  selectedUserId = 0;
+  mes = today().slice(0, 7);
+  userId = this.auth.getCurrentUser()?.id ?? 0;
   users: User[] = [];
-  activities: ActivityItem[] = [];
-  groupedWeeks: WeekGroup[] = [];
+  report: MonthlyReport | null = null;
+  weeks = ['1', '2', '3', '4'];
 
   editingId: number | null = null;
-  selectedPhoto: File | null = null;
+  photo: File | null = null;
+  preview: string | null = null;
   saving = false;
+  form = { fecha: today(), actividad: '', entregable: '' };
 
-  form = {
-    fecha: todayIsoDate(),
-    actividad: '',
-    entregable: '',
-  };
+  week = computeWeekFromDateStr;
 
   ngOnInit(): void {
-    const u = this.auth.user();
-    if (u) this.selectedUserId = u.id;
     if (this.auth.isAdmin()) {
-      this.usersService.listUsers().subscribe((res) => (this.users = res));
+      this.usersService.getUsers().subscribe((res) => (this.users = res));
     }
-    this.loadActivities();
+    this.load();
   }
 
-  previewWeek(fecha: string): string {
-    return calculateWeekLabel(fecha);
+  isOwnReport(): boolean {
+    return this.userId === this.auth.getCurrentUser()?.id;
   }
 
-  loadActivities(): void {
-    this.activitiesService.listActivities(this.mes, this.selectedUserId).subscribe((res) => {
-      this.activities = res;
-      this.buildGroups();
-    });
+  rows(w: string): ActivityLog[] {
+    return this.report?.semanas[w] ?? [];
   }
 
-  buildGroups(): void {
-    const order = ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'];
-    this.groupedWeeks = order
-      .map((sem) => ({
-        semana: sem,
-        items: this.activities.filter((a) => a.semana === sem),
-      }))
-      .filter((g) => g.items.length > 0);
+  load(): void {
+    this.activitiesService.getMonthlyReport(this.mes, this.userId).subscribe((res) => (this.report = res));
   }
 
-  onPhotoSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.selectedPhoto = input.files && input.files.length > 0 ? input.files[0] : null;
+  onPhoto(event: Event): void {
+    this.photo = (event.target as HTMLInputElement).files?.[0] ?? null;
+    this.preview = this.photo ? URL.createObjectURL(this.photo) : null;
   }
 
-  startEdit(item: ActivityItem): void {
+  edit(item: ActivityLog): void {
     this.editingId = item.id;
-    this.form = {
-      fecha: item.fecha,
-      actividad: item.actividad,
-      entregable: item.entregable,
-    };
-    this.selectedPhoto = null;
+    this.form = { fecha: item.fecha_registro, actividad: item.actividad, entregable: item.entregable };
+    this.photo = null;
+    this.preview = null;
   }
 
-  cancelEdit(): void {
+  reset(): void {
     this.editingId = null;
-    this.form = { fecha: todayIsoDate(), actividad: '', entregable: '' };
-    this.selectedPhoto = null;
+    this.form = { fecha: today(), actividad: '', entregable: '' };
+    this.photo = null;
+    this.preview = null;
   }
 
-  saveActivity(): void {
+  save(): void {
     if (!this.form.fecha || !this.form.actividad.trim() || !this.form.entregable.trim()) {
       this.toast.show('Complete fecha, actividad y entregable', 'error');
       return;
     }
-    this.saving = true;
     const fd = new FormData();
-    fd.append('fecha', this.form.fecha);
-    fd.append('actividad', this.form.actividad);
-    fd.append('entregable', this.form.entregable);
-    if (this.selectedPhoto) {
-      fd.append('foto', this.selectedPhoto);
-    }
+    fd.append('fecha_registro', this.form.fecha);
+    fd.append('actividad', this.form.actividad.trim());
+    fd.append('entregable', this.form.entregable.trim());
+    if (this.photo) fd.append('evidencia_foto', this.photo);
 
     const req$ = this.editingId
       ? this.activitiesService.updateActivity(this.editingId, fd)
       : this.activitiesService.createActivity(fd);
 
+    this.saving = true;
     req$.subscribe({
       next: () => {
         this.saving = false;
-        this.toast.show(this.editingId ? 'Actividad actualizada' : 'Actividad agregada al informe');
-        this.cancelEdit();
-        this.loadActivities();
+        this.toast.show(this.editingId ? 'Actividad actualizada' : 'Actividad agregada');
+        this.reset();
+        this.load();
       },
       error: (err) => {
         this.saving = false;
@@ -253,26 +206,26 @@ export class InformesPageComponent implements OnInit {
     });
   }
 
-  removeActivity(item: ActivityItem): void {
+  remove(item: ActivityLog): void {
+    if (!confirm('¿Eliminar este registro?')) return;
     this.activitiesService.deleteActivity(item.id).subscribe({
       next: () => {
         this.toast.show('Registro eliminado');
-        this.loadActivities();
+        this.load();
       },
       error: (err) => this.toast.show(err?.error?.detail || 'No se pudo eliminar', 'error'),
     });
   }
 
-  exportReport(formato: 'docx' | 'pdf'): void {
-    this.toast.show(`Generando informe en formato .${formato.toUpperCase()}...`);
-    this.activitiesService.downloadReport(this.mes, formato, this.selectedUserId).subscribe({
+  export(format: 'docx' | 'pdf'): void {
+    this.activitiesService.downloadExport(format, this.mes, this.userId).subscribe({
       next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Informe_Actividades_${this.mes}.${formato}`;
+        a.download = `Informe_Actividades_${this.mes}.${format}`;
         a.click();
-        window.URL.revokeObjectURL(url);
+        URL.revokeObjectURL(url);
       },
       error: () => this.toast.show('Error al descargar el informe', 'error'),
     });

@@ -33,6 +33,15 @@ export class AuthService {
     return this.userSubject.value;
   }
 
+  isAdmin(): boolean {
+    return this.userSubject.value?.rol === 'ADMIN';
+  }
+
+  logout(): void {
+    this.clearSession();
+    window.location.href = '/auth/login';
+  }
+
   setSession(token: string, user: User): void {
     localStorage.setItem(this.tokenKey, token);
     localStorage.setItem(this.userKey, JSON.stringify(user));

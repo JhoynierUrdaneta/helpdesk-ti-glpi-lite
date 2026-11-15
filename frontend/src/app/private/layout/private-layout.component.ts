@@ -15,7 +15,7 @@ import { AuthService } from '../../shared/services/auth.service';
           <div class="p-6 border-b border-[#EAEAEA]">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 bg-[#111111] text-white rounded flex items-center justify-center">
-                <i class="ph ph-Command text-lg"></i>
+                <i class="ph ph-command text-lg"></i>
               </div>
               <div>
                 <h1 class="font-serif text-xl leading-none tracking-tight">Mesa de Ayuda TI</h1>
@@ -68,8 +68,8 @@ import { AuthService } from '../../shared/services/auth.service';
         <div class="p-4 border-t border-[#EAEAEA] bg-[#FAFAFA]">
           <div class="flex items-center justify-between">
             <div class="truncate pr-2">
-              <p class="text-sm font-medium truncate">{{ auth.user()?.nombre }}</p>
-              <p class="text-xs font-mono text-[#787774]">{{ auth.user()?.rol }} · &#64;{{ auth.user()?.username }}</p>
+              <p class="text-sm font-medium truncate">{{ auth.getCurrentUser()?.nombre }}</p>
+              <p class="text-xs font-mono text-[#787774]">{{ auth.getCurrentUser()?.rol }} · &#64;{{ auth.getCurrentUser()?.usuario }}</p>
             </div>
             <button (click)="auth.logout()" title="Cerrar sesión" class="p-2 text-[#787774] hover:text-[#111111] rounded hover:bg-[#EAEAEA]/50">
               <i class="ph ph-sign-out text-lg"></i>

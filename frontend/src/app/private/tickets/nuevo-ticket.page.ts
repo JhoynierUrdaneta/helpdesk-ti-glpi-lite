@@ -7,21 +7,22 @@ import { CatalogsService } from '../../shared/services/catalogs.service';
 import { UsersService } from '../../shared/services/users.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
-import { CatalogsResponse, Subcategoria } from '../../shared/models/catalog.model';
+import { CatalogsBundle, Subcategoria } from '../../shared/models/catalog.model';
 import { User } from '../../shared/models/user.model';
+import { PRIORIDADES } from './tickets-list.page';
 
 @Component({
   selector: 'app-nuevo-ticket-page',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="max-w-3xl mx-auto space-y-6">
+    <div class="max-w-3xl mx-auto space-y-6 fade-entry">
       <div class="flex items-center justify-between border-b border-[#EAEAEA] pb-5">
         <div>
-          <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Registro GLPI</span>
-          <h2 class="font-serif text-3xl text-[#111111] mt-0.5">Crear Nuevo Ticket TI</h2>
+          <span class="text-xs font-mono uppercase tracking-widest text-[#787774]">Registro</span>
+          <h2 class="font-editorial text-3xl text-[#111111] mt-0.5">Crear Nuevo Ticket TI</h2>
         </div>
-        <a routerLink="/app/tickets" class="btn-secondary text-xs">
+        <a routerLink="/app/tickets" class="btn-secondary-minimal text-xs inline-flex items-center gap-1.5">
           <i class="ph ph-arrow-left"></i> Volver
         </a>
       </div>
@@ -30,32 +31,32 @@ import { User } from '../../shared/models/user.model';
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-medium mb-1">Sede *</label>
-            <select [(ngModel)]="form.sede" name="sede" required class="input-minimal">
-              <option value="" disabled>Seleccione sede...</option>
-              <option *ngFor="let s of catalogs?.sedes" [value]="s.nombre">{{ s.nombre }}</option>
+            <select [(ngModel)]="form.sede_id" name="sede_id" class="input-minimal">
+              <option [ngValue]="0" disabled>Seleccione sede…</option>
+              <option *ngFor="let s of catalogs?.sedes" [ngValue]="s.id">{{ s.nombre }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-xs font-medium mb-1">Técnico Responsable *</label>
-            <select [(ngModel)]="form.responsable_id" name="responsable_id" [disabled]="!auth.isAdmin()" required class="input-minimal">
-              <option *ngFor="let u of users" [ngValue]="u.id">{{ u.nombre }} ({{ u.rol }})</option>
+            <label class="block text-xs font-medium mb-1">Técnico responsable</label>
+            <select [(ngModel)]="form.responsable_id" name="responsable_id" class="input-minimal">
+              <option *ngFor="let u of technicians" [ngValue]="u.id">{{ u.nombre }}</option>
             </select>
           </div>
 
           <div>
             <label class="block text-xs font-medium mb-1">Categoría *</label>
-            <select [(ngModel)]="form.categoria" name="categoria" (change)="onCategoriaChange()" required class="input-minimal">
-              <option value="" disabled>Seleccione categoría...</option>
-              <option *ngFor="let c of catalogs?.categorias" [value]="c.nombre">{{ c.nombre }}</option>
+            <select [(ngModel)]="form.categoria_id" name="categoria_id" (ngModelChange)="onCategoriaChange($event)" class="input-minimal">
+              <option [ngValue]="0" disabled>Seleccione categoría…</option>
+              <option *ngFor="let c of catalogs?.categorias" [ngValue]="c.id">{{ c.nombre }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-xs font-medium mb-1">Subcategoría</label>
-            <select [(ngModel)]="form.subcategoria" name="subcategoria" class="input-minimal">
-              <option value="">General / Sin subcategoría</option>
-              <option *ngFor="let sub of filteredSubcategorias" [value]="sub.nombre">{{ sub.nombre }}</option>
+            <label class="block text-xs font-medium mb-1">Subcategoría *</label>
+            <select [(ngModel)]="form.subcategoria_id" name="subcategoria_id" class="input-minimal" [disabled]="!subcategorias.length">
+              <option [ngValue]="0" disabled>Seleccione subcategoría…</option>
+              <option *ngFor="let sub of subcategorias" [ngValue]="sub.id">{{ sub.nombre }}</option>
             </select>
           </div>
 
@@ -74,30 +75,30 @@ import { User } from '../../shared/models/user.model';
           </div>
 
           <div>
-            <label class="block text-xs font-medium mb-1">Fecha de Compromiso</label>
-            <input type="date" [(ngModel)]="form.fecha_compromiso" name="fecha_compromiso" class="input-minimal font-mono" />
+            <label class="block text-xs font-medium mb-1">Fecha de compromiso</label>
+            <input type="date" [(ngModel)]="form.fecha_compromiso" name="fecha_compromiso" class="input-minimal font-mono-code" />
           </div>
 
           <div>
-            <label class="block text-xs font-medium mb-1">Adjunto o Evidencia Inicial</label>
+            <label class="block text-xs font-medium mb-1">Evidencia inicial</label>
             <input type="file" (change)="onFileSelected($event)" class="input-minimal text-xs" />
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-medium mb-1">Descripción detallada del incidente o requerimiento *</label>
-          <textarea [(ngModel)]="form.descripcion" name="descripcion" rows="4" required class="input-minimal" placeholder="Describa el caso reportado..."></textarea>
+          <label class="block text-xs font-medium mb-1">Descripción del incidente o requerimiento *</label>
+          <textarea [(ngModel)]="form.descripcion" name="descripcion" rows="4" class="input-minimal" placeholder="Describa el caso reportado…"></textarea>
         </div>
 
         <div>
-          <label class="block text-xs font-medium mb-1">Observaciones iniciales</label>
-          <textarea [(ngModel)]="form.observaciones" name="observaciones" rows="2" class="input-minimal" placeholder="Notas técnicas opcionales..."></textarea>
+          <label class="block text-xs font-medium mb-1">Observaciones</label>
+          <textarea [(ngModel)]="form.observaciones" name="observaciones" rows="2" class="input-minimal" placeholder="Notas técnicas opcionales…"></textarea>
         </div>
 
         <div class="flex justify-end gap-2 pt-2 border-t border-[#EAEAEA]">
-          <a routerLink="/app/tickets" class="btn-secondary">Cancelar</a>
-          <button type="submit" [disabled]="saving" class="btn-primary">
-            <i class="ph ph-check"></i> {{ saving ? 'Guardando...' : 'Registrar Ticket' }}
+          <a routerLink="/app/tickets" class="btn-secondary-minimal">Cancelar</a>
+          <button type="submit" [disabled]="saving" class="btn-primary-minimal inline-flex items-center gap-1.5">
+            <i class="ph ph-check"></i> {{ saving ? 'Guardando…' : 'Registrar ticket' }}
           </button>
         </div>
       </form>
@@ -110,73 +111,65 @@ export class NuevoTicketPageComponent implements OnInit {
   private usersService = inject(UsersService);
   private toast = inject(ToastService);
   private router = inject(Router);
-  auth = inject(AuthService);
+  private auth = inject(AuthService);
 
-  catalogs: CatalogsResponse | null = null;
-  filteredSubcategorias: Subcategoria[] = [];
-  users: User[] = [];
+  catalogs: CatalogsBundle | null = null;
+  subcategorias: Subcategoria[] = [];
+  technicians: User[] = [];
   selectedFile: File | null = null;
   saving = false;
 
-  prioridades = ['Baja', 'Media', 'Alta', 'Crítica'];
+  prioridades = PRIORIDADES;
   impactos = ['Bajo', 'Medio', 'Alto'];
 
   form = {
-    sede: '',
-    categoria: '',
-    subcategoria: '',
+    sede_id: 0,
+    categoria_id: 0,
+    subcategoria_id: 0,
     prioridad: 'Media',
     impacto: 'Medio',
     fecha_compromiso: '',
-    responsable_id: 0,
+    responsable_id: this.auth.getCurrentUser()?.id ?? 0,
     descripcion: '',
     observaciones: '',
   };
 
   ngOnInit(): void {
-    const currentUser = this.auth.user();
-    if (currentUser) {
-      this.form.responsable_id = currentUser.id;
-    }
-    this.catalogsService.getCatalogs().subscribe((res) => (this.catalogs = res));
-    this.usersService.listUsers().subscribe((res) => (this.users = res));
+    this.catalogsService.getAllCatalogs().subscribe((res) => (this.catalogs = res));
+    this.usersService.getTechnicians().subscribe((res) => (this.technicians = res));
   }
 
-  onCategoriaChange(): void {
-    this.form.subcategoria = '';
-    const cat = this.catalogs?.categorias.find((c) => c.nombre === this.form.categoria);
-    this.filteredSubcategorias = this.catalogs?.subcategorias.filter((s) => s.categoria_id === cat?.id) || [];
+  onCategoriaChange(id: number): void {
+    this.form.subcategoria_id = 0;
+    this.subcategorias = this.catalogs?.subcategorias.filter((s) => s.categoria_id === id) ?? [];
   }
 
   onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.selectedFile = input.files && input.files.length > 0 ? input.files[0] : null;
+    this.selectedFile = (event.target as HTMLInputElement).files?.[0] ?? null;
   }
 
   submit(): void {
-    if (!this.form.sede || !this.form.categoria || !this.form.descripcion.trim()) {
-      this.toast.show('Complete los campos obligatorios', 'error');
+    const f = this.form;
+    if (!f.sede_id || !f.categoria_id || !f.subcategoria_id || !f.descripcion.trim()) {
+      this.toast.show('Complete sede, categoría, subcategoría y descripción', 'error');
       return;
     }
-    this.saving = true;
     const fd = new FormData();
-    fd.append('sede', this.form.sede);
-    fd.append('categoria', this.form.categoria);
-    fd.append('subcategoria', this.form.subcategoria);
-    fd.append('prioridad', this.form.prioridad);
-    fd.append('impacto', this.form.impacto);
-    fd.append('fecha_compromiso', this.form.fecha_compromiso);
-    fd.append('responsable_id', String(this.form.responsable_id));
-    fd.append('descripcion', this.form.descripcion);
-    fd.append('observaciones', this.form.observaciones);
-    if (this.selectedFile) {
-      fd.append('archivo', this.selectedFile);
-    }
+    fd.append('sede_id', String(f.sede_id));
+    fd.append('categoria_id', String(f.categoria_id));
+    fd.append('subcategoria_id', String(f.subcategoria_id));
+    fd.append('prioridad', f.prioridad);
+    fd.append('impacto', f.impacto);
+    fd.append('descripcion', f.descripcion.trim());
+    if (f.observaciones.trim()) fd.append('observaciones', f.observaciones.trim());
+    if (f.fecha_compromiso) fd.append('fecha_compromiso', f.fecha_compromiso);
+    if (f.responsable_id) fd.append('responsable_id', String(f.responsable_id));
+    if (this.selectedFile) fd.append('evidencia', this.selectedFile);
 
+    this.saving = true;
     this.ticketsService.createTicket(fd).subscribe({
       next: (ticket) => {
-        this.saving = false;
-        this.toast.show(`Ticket #${ticket.id} registrado exitosamente`);
+        this.toast.show(`Ticket #${ticket.id} registrado`);
         this.router.navigate(['/app/tickets', ticket.id]);
       },
       error: (err) => {
