@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
 import { PrivateLayoutComponent } from './layout/private-layout.component';
 import { PanelPageComponent } from './panel/panel.page';
-import { TicketsListPageComponent } from './tickets/tickets-list.page';
-import { NuevoTicketPageComponent } from './tickets/nuevo-ticket.page';
-import { TicketDetallePageComponent } from './tickets/ticket-detalle.page';
+import { TicketsListPageComponent } from './tickets/tickets-list/tickets-list.page';
+import { NuevoTicketPageComponent } from './tickets/nuevo-ticket/nuevo-ticket.page';
+import { TicketDetallePageComponent } from './tickets/ticket-detalle/ticket-detalle.page';
 import { InformesPageComponent } from './informes/informes.page';
 import { UsuariosPageComponent } from './usuarios/usuarios.page';
 import { ConfiguracionPageComponent } from './configuracion/configuracion.page';
