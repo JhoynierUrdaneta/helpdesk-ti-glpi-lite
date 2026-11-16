@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivitiesService } from '../../shared/services/activities.service';
@@ -9,7 +9,13 @@ import { ActivityLog, MonthlyReport } from '../../shared/models/activity.model';
 import { User } from '../../shared/models/user.model';
 import { computeWeekFromDateStr } from '../../shared/utils/date-week.util';
 
-const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+interface SavedActivityTemplate {
+  id: string;
+  actividad: string;
+  entregable: string;
+}
+
+const today = () => new Date().toLocaleDateString('en-CA');
 
 @Component({
   selector: 'app-informes-page',
@@ -41,10 +47,36 @@ const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bento-card space-y-4 h-fit" *ngIf="isOwnReport()">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-mono uppercase tracking-wider text-[#787774]">
+            <h3 class="text-xs font-mono-code uppercase tracking-wider text-[#64748B]">
               {{ editingId ? 'Editar actividad' : 'Registrar actividad del día' }}
             </h3>
             <span class="badge-pill badge-blue">Semana {{ week(form.fecha) }}</span>
+          </div>
+
+          <!-- Selector rápido de actividades guardadas -->
+          <div class="p-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-[#475569] flex items-center gap-1">
+                <i class="ph-bold ph-bookmarks text-[#2B95D6]"></i> Actividades guardadas
+              </span>
+              <span class="text-[11px] font-mono-code text-[#64748B]">{{ templates.length }}</span>
+            </div>
+
+            <div class="flex gap-1.5" *ngIf="templates.length > 0; else emptyTemplates">
+              <select [(ngModel)]="selectedTemplateId" name="selectedTemplateId" (ngModelChange)="applyTemplate($event)" class="input-minimal text-xs py-1.5">
+                <option value="">Elegir actividad guardada…</option>
+                <option *ngFor="let tpl of templates" [value]="tpl.id">
+                  {{ tpl.actividad.length > 48 ? (tpl.actividad | slice:0:48) + '…' : tpl.actividad }}
+                </option>
+              </select>
+              <button *ngIf="selectedTemplateId" type="button" (click)="deleteTemplate(selectedTemplateId)" title="Eliminar plantilla guardada"
+                      class="px-2.5 rounded-md border border-[#CBD5E1] bg-white text-[#64748B] hover:text-[#B91C1C] hover:border-[#FECACA]">
+                <i class="ph ph-trash text-sm"></i>
+              </button>
+            </div>
+            <ng-template #emptyTemplates>
+              <p class="text-[11px] text-[#64748B]">Guarda tus actividades frecuentes para llenarlas en 1 clic y solo montar la foto.</p>
+            </ng-template>
           </div>
 
           <form (ngSubmit)="save()" class="space-y-3">
@@ -53,7 +85,13 @@ const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
               <input type="date" [(ngModel)]="form.fecha" name="fecha" class="input-minimal font-mono-code text-xs" />
             </div>
             <div>
-              <label class="block text-xs font-medium mb-1">Actividad *</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium">Actividad *</label>
+                <button type="button" (click)="saveCurrentAsTemplate()"
+                        class="text-[11px] font-semibold text-[#2B95D6] hover:underline inline-flex items-center gap-1">
+                  <i class="ph ph-bookmark-simple"></i> Guardar actividad
+                </button>
+              </div>
               <textarea [(ngModel)]="form.actividad" name="actividad" rows="3" class="input-minimal" placeholder="Ej: Mantenimiento preventivo de equipos…"></textarea>
             </div>
             <div>
@@ -62,9 +100,15 @@ const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
             </div>
             <div>
               <label class="block text-xs font-medium mb-1">Foto de evidencia {{ editingId ? '(opcional, reemplaza)' : '' }}</label>
-              <input type="file" accept="image/*" (change)="onPhoto($event)" class="input-minimal text-xs" />
-              <img *ngIf="preview" [src]="preview" alt="Vista previa" class="mt-2 w-full h-32 object-cover rounded border border-[#EAEAEA]" />
+              <input #photoInput type="file" accept="image/*" (change)="onPhoto($event)" class="input-minimal text-xs" />
+              <img *ngIf="preview" [src]="preview" alt="Vista previa" class="mt-2 w-full h-32 object-cover rounded border border-[#E2E8F0]" />
             </div>
+
+            <label *ngIf="!editingId" class="flex items-center gap-2 text-xs text-[#475569] pt-0.5 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="saveAsTemplateOnSubmit" name="saveAsTemplateOnSubmit" />
+              Guardar también en "Actividades guardadas"
+            </label>
+
             <div class="flex gap-2 pt-2">
               <button *ngIf="editingId" type="button" (click)="reset()" class="btn-secondary-minimal flex-1">Cancelar</button>
               <button type="submit" [disabled]="saving" class="btn-primary-minimal flex-1 inline-flex items-center justify-center gap-1.5">
@@ -82,7 +126,7 @@ const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
                 <th>Actividad</th>
                 <th class="w-40">Evidencia</th>
                 <th>Entregable</th>
-                <th class="w-24 text-right">Acciones</th>
+                <th class="w-28 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -103,8 +147,19 @@ const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
                   </td>
                   <td class="align-top whitespace-pre-line text-[#334155]">{{ item.entregable }}</td>
                   <td class="align-top text-right whitespace-nowrap">
-                    <button (click)="edit(item)" title="Editar" class="p-1.5 text-[#64748B] hover:text-[#2B95D6]"><i class="ph ph-pencil-simple text-base"></i></button>
-                    <button (click)="remove(item)" title="Eliminar" class="p-1.5 text-[#64748B] hover:text-[#B91C1C]"><i class="ph ph-trash text-base"></i></button>
+                    <ng-container *ngIf="confirmDeleteId !== item.id; else confirmDelTpl">
+                      <button *ngIf="isOwnReport()" (click)="reuseFromRow(item)" title="Repetir esta actividad (solo montar foto)" class="p-1.5 text-[#64748B] hover:text-[#2B95D6]">
+                        <i class="ph ph-copy text-base"></i>
+                      </button>
+                      <button (click)="edit(item)" title="Editar" class="p-1.5 text-[#64748B] hover:text-[#2B95D6]"><i class="ph ph-pencil-simple text-base"></i></button>
+                      <button (click)="confirmDeleteId = item.id" title="Eliminar" class="p-1.5 text-[#64748B] hover:text-[#B91C1C]"><i class="ph ph-trash text-base"></i></button>
+                    </ng-container>
+                    <ng-template #confirmDelTpl>
+                      <div class="inline-flex items-center gap-1">
+                        <button type="button" (click)="remove(item)" class="px-2 py-1 rounded bg-[#B91C1C] text-white text-[11px] font-semibold">Sí</button>
+                        <button type="button" (click)="confirmDeleteId = null" class="px-2 py-1 rounded bg-[#F1F5F9] text-[#475569] text-[11px] font-semibold">No</button>
+                      </div>
+                    </ng-template>
                   </td>
                 </tr>
               </ng-container>
@@ -124,13 +179,20 @@ export class InformesPageComponent implements OnInit {
   private toast = inject(ToastService);
   auth = inject(AuthService);
 
+  @ViewChild('photoInput') photoInput?: ElementRef<HTMLInputElement>;
+
   mes = today().slice(0, 7);
   userId = this.auth.getCurrentUser()?.id ?? 0;
   users: User[] = [];
   report: MonthlyReport | null = null;
   weeks = ['1', '2', '3', '4'];
 
+  templates: SavedActivityTemplate[] = [];
+  selectedTemplateId = '';
+  saveAsTemplateOnSubmit = false;
+
   editingId: number | null = null;
+  confirmDeleteId: number | null = null;
   photo: File | null = null;
   preview: string | null = null;
   saving = false;
@@ -138,11 +200,79 @@ export class InformesPageComponent implements OnInit {
 
   week = computeWeekFromDateStr;
 
+  private get templatesStorageKey(): string {
+    return `helpdesk_ti_activity_templates_${this.auth.getCurrentUser()?.id ?? 0}`;
+  }
+
   ngOnInit(): void {
+    this.loadTemplates();
     if (this.auth.isAdmin()) {
       this.usersService.getUsers().subscribe((res) => (this.users = res));
     }
     this.load();
+  }
+
+  private loadTemplates(): void {
+    try {
+      const raw = localStorage.getItem(this.templatesStorageKey);
+      this.templates = raw ? JSON.parse(raw) : [];
+    } catch {
+      this.templates = [];
+    }
+  }
+
+  private persistTemplates(): void {
+    localStorage.setItem(this.templatesStorageKey, JSON.stringify(this.templates));
+  }
+
+  saveCurrentAsTemplate(silentIfExists = false): void {
+    const act = this.form.actividad.trim();
+    const ent = this.form.entregable.trim();
+    if (!act || !ent) {
+      if (!silentIfExists) {
+        this.toast.show('Escribe Actividad y Entregable para guardarlos como plantilla', 'error');
+      }
+      return;
+    }
+    const exists = this.templates.some(
+      (t) => t.actividad.toLowerCase() === act.toLowerCase() && t.entregable.toLowerCase() === ent.toLowerCase()
+    );
+    if (exists) {
+      if (!silentIfExists) this.toast.show('Esta actividad ya está guardada en tus plantillas');
+      return;
+    }
+    const tpl: SavedActivityTemplate = { id: String(Date.now()), actividad: act, entregable: ent };
+    this.templates = [tpl, ...this.templates];
+    this.persistTemplates();
+    this.selectedTemplateId = tpl.id;
+    if (!silentIfExists) this.toast.show('Actividad guardada para reutilizar');
+  }
+
+  applyTemplate(id: string): void {
+    const tpl = this.templates.find((t) => t.id === id);
+    if (!tpl) return;
+    this.form.actividad = tpl.actividad;
+    this.form.entregable = tpl.entregable;
+  }
+
+  deleteTemplate(id: string): void {
+    this.templates = this.templates.filter((t) => t.id !== id);
+    this.persistTemplates();
+    this.selectedTemplateId = '';
+    this.toast.show('Plantilla eliminada');
+  }
+
+  reuseFromRow(item: ActivityLog): void {
+    this.editingId = null;
+    this.form = {
+      fecha: today(),
+      actividad: item.actividad,
+      entregable: item.entregable,
+    };
+    this.photo = null;
+    this.preview = null;
+    if (this.photoInput) this.photoInput.nativeElement.value = '';
+    this.toast.show('Actividad cargada; selecciona la nueva foto y guarda');
   }
 
   isOwnReport(): boolean {
@@ -167,13 +297,17 @@ export class InformesPageComponent implements OnInit {
     this.form = { fecha: item.fecha_registro, actividad: item.actividad, entregable: item.entregable };
     this.photo = null;
     this.preview = null;
+    if (this.photoInput) this.photoInput.nativeElement.value = '';
   }
 
   reset(): void {
     this.editingId = null;
+    this.selectedTemplateId = '';
+    this.saveAsTemplateOnSubmit = false;
     this.form = { fecha: today(), actividad: '', entregable: '' };
     this.photo = null;
     this.preview = null;
+    if (this.photoInput) this.photoInput.nativeElement.value = '';
   }
 
   save(): void {
@@ -181,6 +315,10 @@ export class InformesPageComponent implements OnInit {
       this.toast.show('Complete fecha, actividad y entregable', 'error');
       return;
     }
+    if (!this.editingId && this.saveAsTemplateOnSubmit) {
+      this.saveCurrentAsTemplate(true);
+    }
+
     const fd = new FormData();
     fd.append('fecha_registro', this.form.fecha);
     fd.append('actividad', this.form.actividad.trim());
@@ -207,7 +345,7 @@ export class InformesPageComponent implements OnInit {
   }
 
   remove(item: ActivityLog): void {
-    if (!confirm('¿Eliminar este registro?')) return;
+    this.confirmDeleteId = null;
     this.activitiesService.deleteActivity(item.id).subscribe({
       next: () => {
         this.toast.show('Registro eliminado');
