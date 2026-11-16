@@ -43,7 +43,7 @@ export class NuevoTicketPageComponent implements OnInit {
     prioridad: 'Media',
     impacto: 'Medio',
     fecha_compromiso: '',
-    responsable_id: this.auth.getCurrentUser()?.id ?? 0,
+    responsable_id: 0,
     descripcion: '',
     observaciones: '',
   };

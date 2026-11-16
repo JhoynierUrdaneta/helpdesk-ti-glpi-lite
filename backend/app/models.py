@@ -92,7 +92,7 @@ class Ticket(Base):
     )
 
     creador_id = Column(Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
-    responsable_id = Column(Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    responsable_id = Column(Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=True)
 
     prioridad = Column(String(30), nullable=False)  # Baja | Media | Alta | Crítica
     impacto = Column(String(30), nullable=False)  # Bajo | Medio | Alto | Crítico

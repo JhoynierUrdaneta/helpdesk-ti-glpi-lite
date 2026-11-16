@@ -47,4 +47,8 @@ export class TicketsService {
   reopenTicket(id: number, motivo: string): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.baseUrl}/${id}/reopen`, { motivo });
   }
+
+  claimTicket(id: number): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.baseUrl}/${id}/claim`, {});
+  }
 }

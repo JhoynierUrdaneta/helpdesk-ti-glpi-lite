@@ -55,11 +55,33 @@ export class TicketDetallePageComponent implements OnInit {
   private setTicket(t: Ticket): void {
     this.ticket = t;
     this.estado = t.estado;
-    this.responsableId = t.responsable_id;
+    this.responsableId = t.responsable_id ?? 0;
     this.fechaCompromiso = t.fecha_compromiso || '';
     this.solucion = t.solucion || '';
     this.showReopenBox = false;
     this.reopenMotivo = '';
+  }
+
+  canManage(): boolean {
+    const u = this.auth.getCurrentUser();
+    if (!u || !this.ticket) return false;
+    return u.rol === 'ADMIN' || u.id === this.ticket.responsable_id;
+  }
+
+  claim(): void {
+    if (!this.ticket) return;
+    this.saving = true;
+    this.ticketsService.claimTicket(this.ticket.id).subscribe({
+      next: (updated) => {
+        this.saving = false;
+        this.setTicket(updated);
+        this.toast.show('Ticket asignado a tu nombre');
+      },
+      error: (err) => {
+        this.saving = false;
+        this.toast.show(err?.error?.detail || 'No se pudo tomar el ticket', 'error');
+      },
+    });
   }
 
   canValidateOrReopen(): boolean {

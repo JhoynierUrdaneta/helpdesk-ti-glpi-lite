@@ -43,7 +43,7 @@ def serialize_ticket(t: Ticket, current_user: Optional[User] = None) -> TicketOu
         creador_id=t.creador_id,
         creador_nombre=t.creador_rel.nombre if t.creador_rel else "",
         responsable_id=t.responsable_id,
-        responsable_nombre=t.responsable_rel.nombre if t.responsable_rel else "",
+        responsable_nombre=t.responsable_rel.nombre if t.responsable_rel else "Sin asignar",
         prioridad=t.prioridad,
         impacto=t.impacto,
         tipo=t.tipo or "Incidente",
@@ -138,7 +138,25 @@ def list_tickets(
 ):
     q = db.query(Ticket)
 
-    if current_user.rol != "ADMIN" or scope == "mine":
+    if scope == "unassigned":
+        q = q.filter(Ticket.responsable_id.is_(None))
+    elif current_user.rol != "ADMIN":
+        if scope == "mine":
+            q = q.filter(
+                or_(
+                    Ticket.creador_id == current_user.id,
+                    Ticket.responsable_id == current_user.id,
+                )
+            )
+        else:
+            q = q.filter(
+                or_(
+                    Ticket.creador_id == current_user.id,
+                    Ticket.responsable_id == current_user.id,
+                    Ticket.responsable_id.is_(None),
+                )
+            )
+    elif scope == "mine":
         q = q.filter(
             or_(
                 Ticket.creador_id == current_user.id,
@@ -172,9 +190,10 @@ def get_ticket(
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket no encontrado.")
-    if current_user.rol != "ADMIN" and current_user.id not in (
-        ticket.creador_id,
-        ticket.responsable_id,
+    if (
+        current_user.rol != "ADMIN"
+        and ticket.responsable_id is not None
+        and current_user.id not in (ticket.creador_id, ticket.responsable_id)
     ):
         raise HTTPException(
             status_code=403, detail="No tienes permiso para ver este ticket."
@@ -202,7 +221,7 @@ async def create_ticket(
         evidencia, subfolder="tickets", images_only=False
     )
 
-    assigned_id = responsable_id if responsable_id else current_user.id
+    assigned_id = responsable_id if responsable_id and responsable_id > 0 else None
 
     ticket = Ticket(
         fecha_creacion=datetime.utcnow(),
@@ -404,6 +423,43 @@ def reopen_ticket(
             estado_anterior=estado_anterior,
             estado_nuevo="En Proceso",
             comentario=f"[Ticket reabierto #{ticket.veces_reabierto}] {payload.motivo.strip()}",
+            fecha=datetime.utcnow(),
+        )
+    )
+    db.commit()
+    db.refresh(ticket)
+    return serialize_ticket(ticket, current_user)
+
+
+@router.post("/{ticket_id}/claim", response_model=TicketOut)
+def claim_ticket(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_active_verified_user),
+):
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado.")
+    if ticket.estado in LOCKED_STATES:
+        raise HTTPException(status_code=400, detail="El ticket ya está finalizado.")
+    if ticket.responsable_id is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Este ticket ya fue asignado o tomado por otro técnico.",
+        )
+
+    estado_anterior = ticket.estado
+    ticket.responsable_id = current_user.id
+    if ticket.estado == "Abierto":
+        ticket.estado = "En Proceso"
+
+    db.add(
+        TicketHistorial(
+            ticket_id=ticket.id,
+            usuario_id=current_user.id,
+            estado_anterior=estado_anterior,
+            estado_nuevo=ticket.estado,
+            comentario=f"Ticket tomado de la cola por {current_user.nombre}.",
             fecha=datetime.utcnow(),
         )
     )

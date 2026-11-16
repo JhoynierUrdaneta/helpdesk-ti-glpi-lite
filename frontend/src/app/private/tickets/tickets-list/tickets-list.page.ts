@@ -10,7 +10,7 @@ import { getPriorityBadgeClass, getStatusBadgeClass } from '../../../shared/util
 export const ESTADOS = ['Abierto', 'En Proceso', 'Pendiente Ext', 'Escalado', 'Resuelto', 'Cerrado', 'Cancelado'];
 export const PRIORIDADES = ['Baja', 'Media', 'Alta', 'Crítica'];
 
-type TicketTab = 'abiertos' | 'mine' | 'proceso' | 'resueltos' | 'cerrados' | 'todos';
+type TicketTab = 'unassigned' | 'abiertos' | 'mine' | 'proceso' | 'resueltos' | 'cerrados' | 'todos';
 
 @Component({
   selector: 'app-tickets-list-page',
@@ -31,6 +31,7 @@ export class TicketsListPageComponent implements OnInit {
 
   activeTab: TicketTab = 'todos';
   tabs: { id: TicketTab; label: string }[] = [
+    { id: 'unassigned', label: 'Sin Asignar (Cola)' },
     { id: 'abiertos', label: 'Abiertos' },
     { id: 'mine', label: 'Mis Tickets' },
     { id: 'proceso', label: 'En Proceso' },
@@ -60,12 +61,17 @@ export class TicketsListPageComponent implements OnInit {
   }
 
   private applyTabFilters(): void {
-    this.filters.scope = this.activeTab === 'mine' ? 'mine' : (this.auth.isAdmin() ? 'all' : 'mine');
-    if (this.activeTab === 'abiertos') this.filters.estado = 'Abierto';
-    else if (this.activeTab === 'proceso') this.filters.estado = 'En Proceso';
-    else if (this.activeTab === 'resueltos') this.filters.estado = 'Resuelto';
-    else if (this.activeTab === 'cerrados') this.filters.estado = 'Cerrado';
-    else this.filters.estado = '';
+    if (this.activeTab === 'unassigned') {
+      this.filters.scope = 'unassigned';
+      this.filters.estado = '';
+    } else {
+      this.filters.scope = this.activeTab === 'mine' ? 'mine' : (this.auth.isAdmin() ? 'all' : 'auto');
+      if (this.activeTab === 'abiertos') this.filters.estado = 'Abierto';
+      else if (this.activeTab === 'proceso') this.filters.estado = 'En Proceso';
+      else if (this.activeTab === 'resueltos') this.filters.estado = 'Resuelto';
+      else if (this.activeTab === 'cerrados') this.filters.estado = 'Cerrado';
+      else this.filters.estado = '';
+    }
     this.loadTickets();
   }
 

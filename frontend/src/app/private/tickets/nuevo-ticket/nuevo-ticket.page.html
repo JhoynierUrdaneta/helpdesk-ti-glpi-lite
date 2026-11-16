@@ -30,6 +30,7 @@
           <div>
             <label class="block text-xs font-medium mb-1">Técnico responsable</label>
             <select [(ngModel)]="form.responsable_id" name="responsable_id" class="input-minimal">
+              <option [ngValue]="0">Cola TI (Sin asignar)</option>
               <option *ngFor="let u of technicians" [ngValue]="u.id">{{ u.nombre }}</option>
             </select>
           </div>

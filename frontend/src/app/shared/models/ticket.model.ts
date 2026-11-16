@@ -24,7 +24,7 @@ export interface Ticket {
   subcategoria_nombre: string;
   creador_id: number;
   creador_nombre: string;
-  responsable_id: number;
+  responsable_id?: number | null;
   responsable_nombre: string;
   prioridad: string;
   impacto: string;

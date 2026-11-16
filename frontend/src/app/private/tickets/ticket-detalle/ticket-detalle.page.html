@@ -17,6 +17,18 @@
         </a>
       </div>
 
+      <!-- Banner de Cola Sin Asignar (GLPI Queue) -->
+      <div *ngIf="!ticket.responsable_id && !ticket.esta_bloqueado" class="bento-card border-l-4 border-[#38A169] bg-[#F0FDF4] flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-[#15803D]">Ticket en Cola TI (Sin asignar)</span>
+          <p class="text-sm text-[#1E293B] mt-0.5">Este ticket aún no tiene un técnico asignado. Puedes tomarlo ahora para comenzar a atenderlo.</p>
+        </div>
+        <button type="button" (click)="claim()" [disabled]="saving"
+                class="px-4 py-2 rounded-md bg-[#38A169] hover:bg-[#2F855A] text-white text-xs font-semibold inline-flex items-center gap-1.5">
+          <i class="ph-bold ph-hand-grabbing"></i> {{ saving ? 'Asignando…' : 'Tomar ticket' }}
+        </button>
+      </div>
+
       <!-- Banner de Validación de Solución (Flujo GLPI cuando estado === 'Resuelto') -->
       <div *ngIf="ticket.estado === 'Resuelto'" class="bento-card border-l-4 border-[#2B95D6] bg-[#F0F9FF] space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
@@ -145,7 +157,7 @@
           </div>
 
           <!-- Formulario de gestión y seguimiento -->
-          <form *ngIf="!ticket.esta_bloqueado" (ngSubmit)="submitFollowup()" class="bento-card space-y-3">
+          <form *ngIf="!ticket.esta_bloqueado && canManage()" (ngSubmit)="submitFollowup()" class="bento-card space-y-3">
             <h3 class="text-xs font-mono-code uppercase tracking-wider text-[#64748B]">Gestionar / Agregar seguimiento</h3>
 
             <div>

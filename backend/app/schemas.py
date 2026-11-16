@@ -118,8 +118,8 @@ class TicketOut(BaseModel):
     subcategoria_nombre: str
     creador_id: int
     creador_nombre: str
-    responsable_id: int
-    responsable_nombre: str
+    responsable_id: Optional[int] = None
+    responsable_nombre: str = "Sin asignar"
     prioridad: str
     impacto: str
     tipo: str = "Incidente"
