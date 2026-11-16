@@ -18,37 +18,65 @@ type CatalogType = 'sedes' | 'categorias' | 'subcategorias';
         <h2 class="text-2xl font-bold text-[#1E293B] mt-0.5">Sedes y Categorías</h2>
       </div>
 
+      <div *ngIf="errorMsg" class="p-3.5 rounded-lg bg-[#FEE2E2] text-[#B91C1C] border border-[#FECACA] text-xs font-semibold flex items-center justify-between gap-2">
+        <span class="flex items-center gap-2"><i class="ph-bold ph-warning-circle text-base"></i> {{ errorMsg }}</span>
+        <button (click)="errorMsg = ''" class="text-[#B91C1C] hover:underline">Cerrar</button>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6" *ngIf="catalogs">
+        <!-- Sedes -->
         <div class="bento-card space-y-4">
-          <h3 class="text-xs font-mono uppercase tracking-wider text-[#787774]">Sedes</h3>
+          <h3 class="text-xs font-mono-code uppercase tracking-wider text-[#64748B]">Sedes</h3>
           <form (ngSubmit)="add('sedes')" class="flex gap-2">
             <input [(ngModel)]="nombres.sedes" name="sede" placeholder="Nueva sede…" class="input-minimal" />
             <button type="submit" class="btn-primary-minimal px-3"><i class="ph ph-plus"></i></button>
           </form>
-          <ul class="divide-y divide-[#EAEAEA] text-sm">
-            <li *ngFor="let s of catalogs.sedes" class="py-2 flex items-center justify-between">
-              <span>{{ s.nombre }}</span>
-              <button (click)="remove('sedes', s.id)" class="text-[#787774] hover:text-[#9F2F2D]"><i class="ph ph-trash"></i></button>
+          <ul class="divide-y divide-[#E2E8F0] text-sm">
+            <li *ngFor="let s of catalogs.sedes" class="py-2.5 flex items-center justify-between gap-2">
+              <span class="truncate">{{ s.nombre }}</span>
+              <ng-container *ngIf="confirmKey !== 'sedes-' + s.id; else confirmTpl">
+                <button type="button" (click)="askRemove('sedes', s.id)" title="Eliminar" class="p-1.5 text-[#64748B] hover:text-[#B91C1C] rounded hover:bg-[#FEE2E2]/50">
+                  <i class="ph ph-trash text-base"></i>
+                </button>
+              </ng-container>
+              <ng-template #confirmTpl>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button type="button" (click)="confirmRemove('sedes', s.id)" class="px-2 py-1 rounded bg-[#B91C1C] text-white text-[11px] font-semibold">Sí</button>
+                  <button type="button" (click)="confirmKey = ''" class="px-2 py-1 rounded bg-[#F1F5F9] text-[#475569] text-[11px] font-semibold">No</button>
+                </div>
+              </ng-template>
             </li>
           </ul>
         </div>
 
+        <!-- Categorías -->
         <div class="bento-card space-y-4">
-          <h3 class="text-xs font-mono uppercase tracking-wider text-[#787774]">Categorías</h3>
+          <h3 class="text-xs font-mono-code uppercase tracking-wider text-[#64748B]">Categorías</h3>
           <form (ngSubmit)="add('categorias')" class="flex gap-2">
             <input [(ngModel)]="nombres.categorias" name="categoria" placeholder="Nueva categoría…" class="input-minimal" />
             <button type="submit" class="btn-primary-minimal px-3"><i class="ph ph-plus"></i></button>
           </form>
-          <ul class="divide-y divide-[#EAEAEA] text-sm">
-            <li *ngFor="let c of catalogs.categorias" class="py-2 flex items-center justify-between">
-              <span>{{ c.nombre }} <span class="font-mono text-[11px] text-[#787774]">({{ c.subcategorias.length }})</span></span>
-              <button (click)="remove('categorias', c.id)" class="text-[#787774] hover:text-[#9F2F2D]"><i class="ph ph-trash"></i></button>
+          <ul class="divide-y divide-[#E2E8F0] text-sm">
+            <li *ngFor="let c of catalogs.categorias" class="py-2.5 flex items-center justify-between gap-2">
+              <span class="truncate">{{ c.nombre }} <span class="font-mono-code text-[11px] text-[#64748B]">({{ c.subcategorias.length }})</span></span>
+              <ng-container *ngIf="confirmKey !== 'categorias-' + c.id; else confirmCatTpl">
+                <button type="button" (click)="askRemove('categorias', c.id)" title="Eliminar" class="p-1.5 text-[#64748B] hover:text-[#B91C1C] rounded hover:bg-[#FEE2E2]/50">
+                  <i class="ph ph-trash text-base"></i>
+                </button>
+              </ng-container>
+              <ng-template #confirmCatTpl>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button type="button" (click)="confirmRemove('categorias', c.id)" class="px-2 py-1 rounded bg-[#B91C1C] text-white text-[11px] font-semibold">Sí</button>
+                  <button type="button" (click)="confirmKey = ''" class="px-2 py-1 rounded bg-[#F1F5F9] text-[#475569] text-[11px] font-semibold">No</button>
+                </div>
+              </ng-template>
             </li>
           </ul>
         </div>
 
+        <!-- Subcategorías -->
         <div class="bento-card space-y-4">
-          <h3 class="text-xs font-mono uppercase tracking-wider text-[#787774]">Subcategorías</h3>
+          <h3 class="text-xs font-mono-code uppercase tracking-wider text-[#64748B]">Subcategorías</h3>
           <form (ngSubmit)="add('subcategorias')" class="space-y-2">
             <select [(ngModel)]="categoriaId" name="categoriaId" class="input-minimal">
               <option *ngFor="let c of catalogs.categorias" [ngValue]="c.id">{{ c.nombre }}</option>
@@ -58,13 +86,23 @@ type CatalogType = 'sedes' | 'categorias' | 'subcategorias';
               <button type="submit" class="btn-primary-minimal px-3"><i class="ph ph-plus"></i></button>
             </div>
           </form>
-          <ul class="divide-y divide-[#EAEAEA] text-sm max-h-80 overflow-y-auto">
-            <li *ngFor="let sub of catalogs.subcategorias" class="py-2 flex items-center justify-between">
-              <div>
-                <p>{{ sub.nombre }}</p>
-                <span class="text-[11px] font-mono text-[#787774]">{{ categoriaNombre(sub.categoria_id) }}</span>
+          <ul class="divide-y divide-[#E2E8F0] text-sm max-h-80 overflow-y-auto pr-1">
+            <li *ngFor="let sub of catalogs.subcategorias" class="py-2.5 flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <p class="truncate">{{ sub.nombre }}</p>
+                <span class="text-[11px] font-mono-code text-[#64748B]">{{ categoriaNombre(sub.categoria_id) }}</span>
               </div>
-              <button (click)="remove('subcategorias', sub.id)" class="text-[#787774] hover:text-[#9F2F2D]"><i class="ph ph-trash"></i></button>
+              <ng-container *ngIf="confirmKey !== 'subcategorias-' + sub.id; else confirmSubTpl">
+                <button type="button" (click)="askRemove('subcategorias', sub.id)" title="Eliminar" class="p-1.5 text-[#64748B] hover:text-[#B91C1C] rounded hover:bg-[#FEE2E2]/50 shrink-0">
+                  <i class="ph ph-trash text-base"></i>
+                </button>
+              </ng-container>
+              <ng-template #confirmSubTpl>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button type="button" (click)="confirmRemove('subcategorias', sub.id)" class="px-2 py-1 rounded bg-[#B91C1C] text-white text-[11px] font-semibold">Sí</button>
+                  <button type="button" (click)="confirmKey = ''" class="px-2 py-1 rounded bg-[#F1F5F9] text-[#475569] text-[11px] font-semibold">No</button>
+                </div>
+              </ng-template>
             </li>
           </ul>
         </div>
@@ -78,6 +116,8 @@ export class ConfiguracionPageComponent implements OnInit {
 
   catalogs: CatalogsBundle | null = null;
   categoriaId = 0;
+  confirmKey = '';
+  errorMsg = '';
   nombres: Record<CatalogType, string> = { sedes: '', categorias: '', subcategorias: '' };
 
   ngOnInit(): void {
@@ -98,6 +138,7 @@ export class ConfiguracionPageComponent implements OnInit {
   add(type: CatalogType): void {
     const nombre = this.nombres[type].trim();
     if (!nombre) return;
+    this.errorMsg = '';
     const catId = type === 'subcategorias' ? this.categoriaId : undefined;
     this.catalogsService.createCatalogItem(type, nombre, catId).subscribe({
       next: () => {
@@ -105,15 +146,32 @@ export class ConfiguracionPageComponent implements OnInit {
         this.toast.show('Elemento agregado');
         this.load();
       },
-      error: (err) => this.toast.show(err?.error?.detail || 'Error al agregar', 'error'),
+      error: (err) => {
+        const msg = err?.error?.detail || 'Error al agregar';
+        this.errorMsg = msg;
+        this.toast.show(msg, 'error');
+      },
     });
   }
 
-  remove(type: CatalogType, id: number): void {
-    if (!confirm('¿Eliminar este elemento?')) return;
+  askRemove(type: CatalogType, id: number): void {
+    this.errorMsg = '';
+    this.confirmKey = `${type}-${id}`;
+  }
+
+  confirmRemove(type: CatalogType, id: number): void {
+    this.confirmKey = '';
+    this.errorMsg = '';
     this.catalogsService.deleteCatalogItem(type, id).subscribe({
-      next: () => this.load(),
-      error: (err) => this.toast.show(err?.error?.detail || 'No se puede eliminar', 'error'),
+      next: () => {
+        this.toast.show('Elemento eliminado correctamente');
+        this.load();
+      },
+      error: (err) => {
+        const msg = err?.error?.detail || 'No se puede eliminar porque está asociado a tickets existentes.';
+        this.errorMsg = msg;
+        this.toast.show(msg, 'error');
+      },
     });
   }
 }
