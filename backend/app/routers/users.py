@@ -1,16 +1,17 @@
+import secrets
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import User
-from ..schemas import UserOut, UserCreate, UserUpdate
+from ..schemas import UserOut, TechnicianOut, UserCreate, UserUpdate
 from ..auth import get_active_verified_user, require_admin, hash_password
 
 router = APIRouter(prefix="/api/users", tags=["Usuarios TI"])
 
 
-@router.get("/technicians", response_model=List[UserOut])
+@router.get("/technicians", response_model=List[TechnicianOut])
 def list_active_technicians(
     db: Session = Depends(get_db),
     _: User = Depends(get_active_verified_user),
@@ -48,11 +49,11 @@ def create_user(
             detail=f"El nombre de usuario '{usuario}' ya está registrado.",
         )
 
-    # Contraseña inicial igual al nombre de usuario → obliga cambio en el primer login
+    temp_password = secrets.token_urlsafe(10)
     user = User(
         nombre=nombre,
         usuario=usuario,
-        password_hash=hash_password(usuario),
+        password_hash=hash_password(temp_password),
         rol=payload.rol if payload.rol in ("ADMIN", "USER") else "USER",
         activo=True,
         must_change_password=True,
@@ -60,7 +61,9 @@ def create_user(
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+    out = UserOut.model_validate(user)
+    out.temp_password = temp_password
+    return out
 
 
 @router.put("/{user_id}", response_model=UserOut)
@@ -92,18 +95,31 @@ def update_user(
             detail="No puedes desactivar tu propia cuenta en sesión.",
         )
 
+    if user.id == current_admin.id and payload.rol != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No puedes degradar tu propio rol de administrador.",
+        )
+
     user.nombre = payload.nombre.strip()
     user.usuario = usuario
     user.rol = payload.rol if payload.rol in ("ADMIN", "USER") else user.rol
     user.activo = payload.activo
+    if not payload.activo:
+        user.token_version = (user.token_version or 1) + 1
 
+    temp_password = None
     if payload.reset_password:
-        user.password_hash = hash_password(usuario)
+        temp_password = secrets.token_urlsafe(10)
+        user.password_hash = hash_password(temp_password)
         user.must_change_password = True
+        user.token_version = (user.token_version or 1) + 1
 
     db.commit()
     db.refresh(user)
-    return user
+    out = UserOut.model_validate(user)
+    out.temp_password = temp_password
+    return out
 
 
 @router.delete("/{user_id}")

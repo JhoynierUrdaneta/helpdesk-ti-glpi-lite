@@ -23,6 +23,7 @@ class User(Base):
     rol = Column(String(20), nullable=False, default="USER")  # ADMIN | USER
     activo = Column(Boolean, default=True, nullable=False)
     must_change_password = Column(Boolean, default=True, nullable=False)
+    token_version = Column(Integer, default=1, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 

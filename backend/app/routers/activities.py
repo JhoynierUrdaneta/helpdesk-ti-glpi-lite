@@ -200,7 +200,7 @@ def delete_daily_activity(
 
 @router.get("/export/docx")
 def export_monthly_docx(
-    month: Optional[str] = Query(None),
+    month: Optional[str] = Query(None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
     user_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_active_verified_user),
@@ -235,7 +235,7 @@ def export_monthly_docx(
 
 @router.get("/export/pdf")
 def export_monthly_pdf(
-    month: Optional[str] = Query(None),
+    month: Optional[str] = Query(None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
     user_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_active_verified_user),

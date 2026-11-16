@@ -17,6 +17,7 @@ def _ensure_glpi_columns():
         "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS calificacion INTEGER",
         "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS veces_reabierto INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE ticket_historial ADD COLUMN IF NOT EXISTS es_privado BOOLEAN NOT NULL DEFAULT FALSE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1",
     ]
     with engine.begin() as conn:
         for s in stmts:

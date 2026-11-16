@@ -130,6 +130,7 @@ def generate_monthly_docx(
                     try:
                         # Convertir a PNG/RGB en memoria por si es WEBP
                         with Image.open(img_path) as im:
+                            im.thumbnail((800, 800))
                             im_rgb = im.convert("RGB")
                             img_buf = io.BytesIO()
                             im_rgb.save(img_buf, format="JPEG", quality=85)
@@ -237,6 +238,7 @@ def generate_monthly_pdf(
                 if img_path:
                     try:
                         with Image.open(img_path) as im:
+                            im.thumbnail((800, 800))
                             im_rgb = im.convert("RGB")
                             img_buf = io.BytesIO()
                             im_rgb.save(img_buf, format="JPEG", quality=85)

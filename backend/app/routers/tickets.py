@@ -18,9 +18,17 @@ from ..auth import get_active_verified_user, save_validated_upload
 router = APIRouter(prefix="/api/tickets", tags=["Tickets TI"])
 
 LOCKED_STATES = {"Cerrado", "Cancelado"}
+ALLOWED_TICKET_STATES = {"Abierto", "En Proceso", "Pendiente Ext", "Escalado", "Resuelto", "Cerrado", "Cancelado"}
 
 
-def serialize_ticket(t: Ticket) -> TicketOut:
+def serialize_ticket(t: Ticket, current_user: Optional[User] = None) -> TicketOut:
+    can_see_private = bool(
+        current_user
+        and (current_user.rol == "ADMIN" or current_user.id == t.responsable_id)
+    )
+    visible_history = [
+        h for h in (t.historial or []) if not h.es_privado or can_see_private
+    ]
     return TicketOut(
         id=t.id,
         fecha_creacion=t.fecha_creacion,
@@ -60,7 +68,7 @@ def serialize_ticket(t: Ticket) -> TicketOut:
                 adjunto_url=h.adjunto_url,
                 fecha=h.fecha,
             )
-            for h in (t.historial or [])
+            for h in visible_history
         ],
     )
 
@@ -130,8 +138,7 @@ def list_tickets(
 ):
     q = db.query(Ticket)
 
-    # En modo TI (tipo GLPI ligero), ADMIN ve todos por defecto, USER ve los suyos o puede filtrar
-    if scope == "mine" or (scope == "auto" and current_user.rol != "ADMIN"):
+    if current_user.rol != "ADMIN" or scope == "mine":
         q = q.filter(
             or_(
                 Ticket.creador_id == current_user.id,
@@ -153,19 +160,26 @@ def list_tickets(
         )
 
     tickets = q.order_by(Ticket.fecha_creacion.desc()).all()
-    return [serialize_ticket(t) for t in tickets]
+    return [serialize_ticket(t, current_user) for t in tickets]
 
 
 @router.get("/{ticket_id}", response_model=TicketOut)
 def get_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_active_verified_user),
+    current_user: User = Depends(get_active_verified_user),
 ):
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket no encontrado.")
-    return serialize_ticket(ticket)
+    if current_user.rol != "ADMIN" and current_user.id not in (
+        ticket.creador_id,
+        ticket.responsable_id,
+    ):
+        raise HTTPException(
+            status_code=403, detail="No tienes permiso para ver este ticket."
+        )
+    return serialize_ticket(ticket, current_user)
 
 
 @router.post("", response_model=TicketOut)
@@ -223,7 +237,7 @@ async def create_ticket(
     db.add(initial_log)
     db.commit()
     db.refresh(ticket)
-    return serialize_ticket(ticket)
+    return serialize_ticket(ticket, current_user)
 
 
 @router.post("/{ticket_id}/manage", response_model=TicketOut)
@@ -242,6 +256,23 @@ async def manage_ticket(
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket no encontrado.")
+
+    if current_user.rol != "ADMIN" and current_user.id != ticket.responsable_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Solo el técnico responsable o un administrador puede gestionar este ticket.",
+        )
+
+    if estado not in ALLOWED_TICKET_STATES:
+        raise HTTPException(
+            status_code=400, detail=f"Estado de ticket inválido: '{estado}'."
+        )
+
+    if estado == "Cerrado" and current_user.rol != "ADMIN":
+        raise HTTPException(
+            status_code=400,
+            detail="Para cerrar un ticket, márcalo como 'Resuelto' para que el solicitante apruebe la solución.",
+        )
 
     if ticket.estado in LOCKED_STATES:
         raise HTTPException(
@@ -288,7 +319,7 @@ async def manage_ticket(
     db.add(historial_item)
     db.commit()
     db.refresh(ticket)
-    return serialize_ticket(ticket)
+    return serialize_ticket(ticket, current_user)
 
 
 @router.post("/{ticket_id}/approve", response_model=TicketOut)
@@ -332,7 +363,7 @@ def approve_solution(
     )
     db.commit()
     db.refresh(ticket)
-    return serialize_ticket(ticket)
+    return serialize_ticket(ticket, current_user)
 
 
 @router.post("/{ticket_id}/reopen", response_model=TicketOut)
@@ -378,4 +409,4 @@ def reopen_ticket(
     )
     db.commit()
     db.refresh(ticket)
-    return serialize_ticket(ticket)
+    return serialize_ticket(ticket, current_user)

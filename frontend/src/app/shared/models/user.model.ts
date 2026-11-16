@@ -5,6 +5,7 @@ export interface User {
   rol: 'ADMIN' | 'USER';
   activo: boolean;
   must_change_password: boolean;
+  temp_password?: string | null;
   created_at: string;
 }
 

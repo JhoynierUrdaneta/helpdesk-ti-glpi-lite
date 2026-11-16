@@ -48,8 +48,12 @@ export class UsuariosPageComponent implements OnInit {
       : this.usersService.createUser({ nombre: this.form.nombre, usuario: this.form.usuario, rol: this.form.rol });
 
     req$.subscribe({
-      next: () => {
-        this.toast.show(this.editing ? 'Usuario actualizado' : 'Usuario creado');
+      next: (res) => {
+        const baseMsg = this.editing ? 'Usuario actualizado' : 'Usuario creado';
+        const msg = res.temp_password
+          ? `${baseMsg}. Clave temporal: ${res.temp_password}`
+          : baseMsg;
+        this.toast.show(msg);
         this.reset();
         this.load();
       },

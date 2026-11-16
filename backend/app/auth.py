@@ -48,6 +48,7 @@ def create_access_token(user: User) -> str:
         "usuario": user.usuario,
         "rol": user.rol,
         "must_change_password": user.must_change_password,
+        "tv": user.token_version or 1,
         "exp": expire,
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
@@ -55,15 +56,27 @@ def create_access_token(user: User) -> str:
 
 def is_brute_force_locked(db: Session, ip: str, usuario: str) -> bool:
     cutoff = datetime.utcnow() - timedelta(minutes=15)
-    count = (
+    pair_count = (
         db.query(LoginAttempt)
         .filter(
-            or_(LoginAttempt.ip == ip, LoginAttempt.usuario == usuario),
+            LoginAttempt.ip == ip,
+            LoginAttempt.usuario == usuario,
             LoginAttempt.fecha >= cutoff,
         )
         .count()
     )
-    return count >= 7
+    ip_count = (
+        db.query(LoginAttempt)
+        .filter(LoginAttempt.ip == ip, LoginAttempt.fecha >= cutoff)
+        .count()
+    )
+    return pair_count >= 7 or ip_count >= 20
+
+
+def clear_failed_attempts(db: Session, ip: str, usuario: str) -> None:
+    db.query(LoginAttempt).filter(
+        LoginAttempt.ip == ip, LoginAttempt.usuario == usuario
+    ).delete(synchronize_session=False)
 
 
 def record_failed_attempt(db: Session, ip: str, usuario: str) -> None:
@@ -82,6 +95,7 @@ def get_current_user(
             token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
         )
         user_id = int(payload.get("sub", 0))
+        token_version = int(payload.get("tv", 1))
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -89,10 +103,10 @@ def get_current_user(
         )
 
     user = db.query(User).filter(User.id == user_id, User.activo == True).first()
-    if not user:
+    if not user or (user.token_version or 1) != token_version:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario no encontrado o inactivo.",
+            detail="Usuario no encontrado, inactivo o sesión revocada.",
         )
     return user
 

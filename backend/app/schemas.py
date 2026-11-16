@@ -11,8 +11,17 @@ class LoginRequest(BaseModel):
 
 
 class ChangePasswordRequest(BaseModel):
+    current_password: Optional[str] = None
     new_password: str = Field(..., min_length=6)
     confirm_password: str = Field(..., min_length=6)
+
+
+class TechnicianOut(BaseModel):
+    id: int
+    nombre: str
+
+    class Config:
+        from_attributes = True
 
 
 class UserOut(BaseModel):
@@ -22,6 +31,7 @@ class UserOut(BaseModel):
     rol: str
     activo: bool
     must_change_password: bool
+    temp_password: Optional[str] = None
     created_at: datetime
 
     class Config:

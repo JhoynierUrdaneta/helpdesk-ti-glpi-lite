@@ -11,6 +11,7 @@ from ..auth import (
     hash_password,
     create_access_token,
     is_brute_force_locked,
+    clear_failed_attempts,
     record_failed_attempt,
     get_current_user,
 )
@@ -73,6 +74,8 @@ async def login(payload: LoginRequest, request: Request, db: Session = Depends(g
         db.commit()
         db.refresh(user)
 
+    clear_failed_attempts(db, client_ip, usuario)
+
     # Registrar en bitácora de logins si no requiere cambio o al autenticarse
     log_entry = LoginLog(
         usuario_id=user.id,
@@ -97,6 +100,15 @@ def change_initial_password(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if not current_user.must_change_password:
+        if not payload.current_password or not verify_password(
+            payload.current_password, current_user.password_hash
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La contraseña actual es incorrecta.",
+            )
+
     if payload.new_password != payload.confirm_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -111,6 +123,7 @@ def change_initial_password(
 
     current_user.password_hash = hash_password(payload.new_password)
     current_user.must_change_password = False
+    current_user.token_version = (current_user.token_version or 1) + 1
     db.commit()
     db.refresh(current_user)
 

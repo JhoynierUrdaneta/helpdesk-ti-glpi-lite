@@ -32,7 +32,7 @@
               <label class="flex items-center gap-2 text-xs"><input type="checkbox" [(ngModel)]="form.reset_password" name="reset_password" /> Restablecer contraseña</label>
             </ng-container>
 
-            <p class="text-[11px] text-[#787774]">La contraseña temporal es igual al usuario; se exige cambiarla en el primer ingreso.</p>
+            <p class="text-[11px] text-[#787774]">Al crear o restablecer un usuario se genera una contraseña temporal aleatoria; se exige cambiarla en el primer ingreso.</p>
 
             <div class="flex gap-2 pt-2">
               <button *ngIf="editing" type="button" (click)="reset()" class="btn-secondary-minimal flex-1">Cancelar</button>
